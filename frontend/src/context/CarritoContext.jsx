@@ -10,7 +10,10 @@ export function CarritoProvider({ children }) {
     const stock = Number(producto.stock) || 0;
 
     if (stock <= 0) {
-      return { ok: false, mensaje: 'Este producto no tiene stock disponible.' };
+      return {
+        ok: false,
+        mensaje: 'Este producto no tiene stock disponible.',
+      };
     }
 
     const existente = items.find(
@@ -18,7 +21,10 @@ export function CarritoProvider({ children }) {
     );
 
     if (existente && existente.cantidad >= stock) {
-      return { ok: false, mensaje: 'Alcanzaste el stock disponible.' };
+      return {
+        ok: false,
+        mensaje: 'Alcanzaste el stock disponible.',
+      };
     }
 
     setItems((actuales) => {
@@ -39,16 +45,26 @@ export function CarritoProvider({ children }) {
       return [...actuales, { ...producto, cantidad: 1 }];
     });
 
-    return { ok: true, mensaje: 'Producto agregado al carrito.' };
+    return {
+      ok: true,
+      mensaje: 'Producto agregado al carrito.',
+    };
   }
 
   function cambiarCantidad(codigo, cantidadSolicitada) {
-    const cantidad = Math.floor(Number(cantidadSolicitada));
+    // Si el campo está vacío, conservamos la cantidad actual.
+    if (
+      cantidadSolicitada === '' ||
+      cantidadSolicitada === null ||
+      cantidadSolicitada === undefined
+    ) {
+      return;
+    }
 
-    if (!Number.isFinite(cantidad)) return;
+    const cantidad = Number(cantidadSolicitada);
 
-    if (cantidad <= 0) {
-      eliminarProducto(codigo);
+    // Solo permitimos cantidades enteras positivas.
+    if (!Number.isInteger(cantidad) || cantidad < 1) {
       return;
     }
 
@@ -57,6 +73,8 @@ export function CarritoProvider({ children }) {
         if (item.codigo !== codigo) return item;
 
         const stock = Number(item.stock) || 0;
+
+        if (stock < 1) return item;
 
         return {
           ...item,
@@ -77,14 +95,17 @@ export function CarritoProvider({ children }) {
   }
 
   const totalUnidades = items.reduce(
-    (total, item) => total + item.cantidad,
+    (suma, item) => suma + item.cantidad,
     0
   );
 
-  const total = items.reduce(
-    (suma, item) => suma + Number(item.precio) * item.cantidad,
-    0
-  );
+  const total = items.reduce((suma, item) => {
+    const precio = Number(item.precio);
+
+    if (!Number.isFinite(precio)) return suma;
+
+    return suma + precio * item.cantidad;
+  }, 0);
 
   const valor = useMemo(
     () => ({

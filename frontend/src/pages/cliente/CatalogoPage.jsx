@@ -29,7 +29,10 @@ function CatalogoPage() {
       ),
     ];
 
-    return ['Todas', ...lista.sort((a, b) => a.localeCompare(b, 'es'))];
+    return [
+      'Todas',
+      ...lista.sort((a, b) => a.localeCompare(b, 'es')),
+    ];
   }, []);
 
   const productosFiltrados = useMemo(() => {
@@ -149,6 +152,9 @@ function CatalogoPage() {
             const stock = Number(producto.stock) || 0;
             const disponible = stock > 0;
 
+            const rutaDetalle =
+              `/producto/${encodeURIComponent(producto.codigo)}`;
+
             return (
               <div
                 className="col-12 col-sm-6 col-lg-4"
@@ -175,8 +181,21 @@ function CatalogoPage() {
                     </p>
 
                     <h3 className="h5 fw-bold mb-2">
-                      {producto.nombre}
+                      <Link
+                        to={rutaDetalle}
+                        className="text-decoration-none text-dark"
+                        aria-label={`Ver detalle de ${producto.nombre}`}
+                      >
+                        {producto.nombre}
+                      </Link>
                     </h3>
+
+                    <Link
+                      to={rutaDetalle}
+                      className="small text-primary mb-2"
+                    >
+                      Ver detalle del producto
+                    </Link>
 
                     <p className="text-secondary small mb-2">
                       {producto.marca}
