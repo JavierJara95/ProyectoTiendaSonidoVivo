@@ -1,0 +1,19 @@
+
+# dependencias
+node_modules/
+frontend/node_modules/
+
+# archivos generados
+dist/
+frontend/dist/
+coverage/
+
+# variables de entorno y secretos
+.env
+.env.*
+!.env.example
+
+# archivos del sistema y del editor
+.DS_Store
+Thumbs.db
+.vscode/
