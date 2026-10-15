@@ -1,8 +1,9 @@
-import GestionPedidosPage from "./pages/vendedor/GestionPedidosPage"
+
+import ControlStockPage from "./pages/vendedor/ControlStockPage"
 
 function App() {
   return (
-    <GestionPedidosPage />
+    <ControlStockPage />
   )
 }
 
