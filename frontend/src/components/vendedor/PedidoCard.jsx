@@ -35,7 +35,13 @@ function PedidoCard({ pedido, onCambiarEstado, onGuardarSeguimiento }) {
           <select
             className="form-select"
             value={pedido.estado}
-            onChange={(e) => onCambiarEstado(pedido.id, e.target.value)}
+            aria-label={`Estado pedido ${pedido.id}`}
+            onChange={(e) =>
+              onCambiarEstado(
+                pedido.id,
+                e.target.value
+              )
+            }
           >
             <option>En preparación</option>
             <option>Despachado</option>

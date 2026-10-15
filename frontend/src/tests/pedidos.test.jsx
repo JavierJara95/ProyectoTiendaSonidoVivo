@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 
@@ -19,20 +19,28 @@ describe("GestionPedidosPage", () => {
   })
 
 
-  it("permite cambiar el estado de un pedido", async () => {
-    const user = userEvent.setup()
+it("permite cambiar el estado de un pedido", async () => {
+  const user = userEvent.setup()
 
-    render(<GestionPedidosPage />)
+  render(<GestionPedidosPage />)
 
-    const selects = screen.getAllByRole("combobox")
-
-    await user.selectOptions(
-      selects[0],
-      "Despachado"
+  const selectorEstado =
+    screen.getByRole(
+      "combobox",
+      {
+        name: "Estado pedido 1001"
+      }
     )
 
-    expect(selects[0]).toHaveValue("Despachado")
-  })
+  await user.selectOptions(
+    selectorEstado,
+    "Despachado"
+  )
+
+  expect(
+    selectorEstado
+  ).toHaveValue("Despachado")
+})
 
 })
 
@@ -58,18 +66,66 @@ it("guarda los pedidos modificados en localStorage", async () => {
 
   render(<GestionPedidosPage />)
 
-  const selects = screen.getAllByRole("combobox")
+  const selectorEstado = screen.getByLabelText(
+    "Estado pedido 1001"
+  )
 
   await user.selectOptions(
-    selects[0],
+    selectorEstado,
     "Despachado"
   )
 
-  const datosGuardados = JSON.parse(
-    localStorage.getItem("sonidoVivo_pedidos")
+  await waitFor(() => {
+    const datosGuardados = JSON.parse(
+      localStorage.getItem(
+        "sonidoVivo_pedidos"
+      )
+    )
+
+    expect(
+      datosGuardados[0].estado
+    ).toBe("Despachado")
+  })
+})
+it("permite filtrar pedidos por estado", async () => {
+
+  const user = userEvent.setup()
+
+  render(<GestionPedidosPage />)
+
+  const filtro = screen.getByLabelText(
+    "Filtrar por estado"
+  )
+
+  await user.selectOptions(
+    filtro,
+    "Despachado"
   )
 
   expect(
-    datosGuardados[0].estado
-  ).toBe("Despachado")
+    screen.getByText("Pedido #1002")
+  ).toBeInTheDocument()
+
+  expect(
+    screen.queryByText("Pedido #1001")
+  ).not.toBeInTheDocument()
+
+})
+
+it("muestra el resumen de pedidos", () => {
+
+  render(<GestionPedidosPage />)
+
+  expect(
+    screen.getByText("Total")
+  ).toBeInTheDocument()
+
+  expect(
+    screen.getByText("Despachados")
+  ).toBeInTheDocument()
+
+  expect(
+    screen.getByText("Entregados")
+  ).toBeInTheDocument()
+
 })
