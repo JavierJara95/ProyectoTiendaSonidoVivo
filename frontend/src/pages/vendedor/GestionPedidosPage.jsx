@@ -1,9 +1,26 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+
 import { pedidosIniciales } from "../../data/pedidos"
 import PedidoCard from "../../components/vendedor/PedidoCard"
 
+import {
+  cargarDatos,
+  guardarDatos
+} from "../../utils/storage"
+
 function GestionPedidosPage() {
-  const [pedidos, setPedidos] = useState(pedidosIniciales)
+  const [pedidos, setPedidos] = useState(() =>
+  cargarDatos(
+    "sonidoVivo_pedidos",
+    pedidosIniciales
+  )
+)
+useEffect(() => {
+  guardarDatos(
+    "sonidoVivo_pedidos",
+    pedidos
+  )
+}, [pedidos])
 
   const cambiarEstado = (id, nuevoEstado) => {
     setPedidos((pedidosActuales) =>

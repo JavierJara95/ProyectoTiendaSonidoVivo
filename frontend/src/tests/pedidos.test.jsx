@@ -35,6 +35,7 @@ describe("GestionPedidosPage", () => {
   })
 
 })
+
 it("permite ingresar un número de seguimiento", async () => {
   const user = userEvent.setup()
 
@@ -50,4 +51,25 @@ it("permite ingresar un número de seguimiento", async () => {
   )
 
   expect(inputs[0]).toHaveValue("STK123456")
+})
+
+it("guarda los pedidos modificados en localStorage", async () => {
+  const user = userEvent.setup()
+
+  render(<GestionPedidosPage />)
+
+  const selects = screen.getAllByRole("combobox")
+
+  await user.selectOptions(
+    selects[0],
+    "Despachado"
+  )
+
+  const datosGuardados = JSON.parse(
+    localStorage.getItem("sonidoVivo_pedidos")
+  )
+
+  expect(
+    datosGuardados[0].estado
+  ).toBe("Despachado")
 })

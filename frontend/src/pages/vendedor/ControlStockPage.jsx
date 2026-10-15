@@ -1,9 +1,25 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { productosIniciales } from "../../data/productos"
 import StockRow from "../../components/vendedor/StockRow"
+import {
+  cargarDatos,
+  guardarDatos
+} from "../../utils/storage"
 
 function ControlStockPage() {
-  const [productos, setProductos] = useState(productosIniciales)
+const [productos, setProductos] = useState(() =>
+  cargarDatos(
+    "sonidoVivo_productos",
+    productosIniciales
+  )
+)
+useEffect(() => {
+  guardarDatos(
+    "sonidoVivo_productos",
+    productos
+  )
+}, [productos])
+
   const [busqueda, setBusqueda] = useState("")
 
   const aumentarStock = (id) => {
