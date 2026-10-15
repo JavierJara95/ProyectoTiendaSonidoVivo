@@ -1,9 +1,8 @@
-
-import ControlStockPage from "./pages/vendedor/ControlStockPage"
+import AppRouter from "./routes/AppRouter"
 
 function App() {
   return (
-    <ControlStockPage />
+    <AppRouter />
   )
 }
 
