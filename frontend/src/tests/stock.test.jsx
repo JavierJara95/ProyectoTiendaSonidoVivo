@@ -38,6 +38,8 @@ describe("ControlStockPage", () => {
   })
 
 })
+
+
 it("permite aumentar el stock", async () => {
   const user = userEvent.setup()
 
@@ -50,10 +52,13 @@ it("permite aumentar el stock", async () => {
 
   await user.click(botonesAumentar[0])
 
-  expect(
-    screen.getByText("5")
-  ).toBeInTheDocument()
+  const filaProducto = screen
+    .getByText("Guitarra Fender Stratocaster")
+    .closest("tr")
+
+  expect(filaProducto).toHaveTextContent("5")
 })
+
 it("no permite disminuir el stock cuando está en cero", () => {
   render(<ControlStockPage />)
 
