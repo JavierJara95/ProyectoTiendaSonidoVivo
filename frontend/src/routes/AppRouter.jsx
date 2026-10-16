@@ -10,6 +10,8 @@ import { CarritoProvider } from '../context/CarritoContext.jsx';
 import CatalogoPage from '../pages/cliente/CatalogoPage.jsx';
 import CarritoPage from '../pages/cliente/CarritoPage.jsx';
 import DetalleProductoPage from '../pages/cliente/DetalleProductoPage.jsx';
+import PedidoConfirmadoPage from '../pages/cliente/PedidoConfirmadoPage.jsx';
+import SeguimientoPedidoPage from '../pages/cliente/SeguimientoPedidoPage.jsx';
 
 function AppRouter() {
   return (
@@ -34,6 +36,16 @@ function AppRouter() {
           <Route
             path="/carrito"
             element={<CarritoPage />}
+          />
+
+          <Route
+            path="/pedido-confirmado"
+            element={<PedidoConfirmadoPage />}
+          />
+
+          <Route
+            path="/seguimiento"
+            element={<SeguimientoPedidoPage />}
           />
 
           <Route

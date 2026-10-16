@@ -1,3 +1,4 @@
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -11,7 +12,6 @@ export default defineConfig({
     include: ['src/tests/**/*.test.{js,jsx,ts,tsx}'],
     exclude: [
       'node_modules/**',
-      'src/tests/cliente.test.jsx',
       'src/tests/vendedor.test.jsx',
     ],
   },
