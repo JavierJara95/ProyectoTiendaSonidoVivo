@@ -38,8 +38,9 @@ function AppRouter() {
             element={<CarritoPage />}
           />
 
+          {/* El folio identifica el pedido recién confirmado */}
           <Route
-            path="/pedido-confirmado"
+            path="/pedido-confirmado/:folio"
             element={<PedidoConfirmadoPage />}
           />
 
