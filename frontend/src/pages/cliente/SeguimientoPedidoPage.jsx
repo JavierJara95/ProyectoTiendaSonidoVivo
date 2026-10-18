@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { buscarPedido } from '../../data/pedidos.js';
+import { rutaCliente } from './rutasCliente.js';
 
 function formatearPrecio(precio) {
   return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(Number(precio) || 0);
 }
 
 function SeguimientoPedidoPage() {
+  const location = useLocation();
   const [folio, setFolio] = useState('');
   const [correo, setCorreo] = useState('');
   const [pedido, setPedido] = useState(null);
@@ -52,10 +54,11 @@ function SeguimientoPedidoPage() {
                 <p className="small text-secondary mb-1">Pedido encontrado</p>
                 <h2 id="resultado-seguimiento-titulo" className="h4 fw-bold">{pedido.folio}</h2>
                 <p>Estado actual: <span className="badge text-bg-primary">{pedido.estado}</span></p>
-                <p className="mb-1"><strong>Cliente:</strong> {pedido.cliente.nombre}</p>
+                <p className="mb-1"><strong>Cliente:</strong> {pedido.datosCliente?.nombre || pedido.cliente}</p>
                 <p className="mb-1"><strong>Fecha:</strong> {new Date(pedido.fecha).toLocaleString('es-CL')}</p>
-                <p className="mb-1"><strong>Entrega:</strong> {pedido.entrega.tipo}</p>
-                {pedido.entrega.tipo === 'Despacho a domicilio' && <p className="mb-1"><strong>Empresa:</strong> {pedido.entrega.transportista}</p>}
+                <p className="mb-1"><strong>Entrega:</strong> {pedido.entrega?.tipo || pedido.tipoEntrega}</p>
+                {(pedido.entrega?.transportista || ['Starken', 'Chilexpress'].includes(pedido.tipoEntrega)) && <p className="mb-1"><strong>Empresa:</strong> {pedido.entrega?.transportista || pedido.tipoEntrega}</p>}
+                {pedido.numeroSeguimiento && <p className="mb-1"><strong>Número de seguimiento:</strong> {pedido.numeroSeguimiento}</p>}
                 <p className="fw-bold mt-3">Total: {formatearPrecio(pedido.total)}</p>
                 <h3 className="h6 fw-bold mt-4">Productos</h3>
                 <ul className="list-group list-group-flush">
@@ -67,8 +70,8 @@ function SeguimientoPedidoPage() {
         )}
       </div>
       <div className="d-flex flex-wrap gap-2 mt-4">
-        <Link to="/catalogo" className="btn btn-outline-primary">Volver al catálogo</Link>
-        <Link to="/carrito" className="btn btn-outline-secondary">Ir al carrito</Link>
+        <Link to={rutaCliente(location.pathname, 'catalogo')} className="btn btn-outline-primary">Volver al catálogo</Link>
+        <Link to={rutaCliente(location.pathname, 'carrito')} className="btn btn-outline-secondary">Ir al carrito</Link>
       </div>
     </main>
   );

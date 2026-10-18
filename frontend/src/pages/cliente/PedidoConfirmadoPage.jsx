@@ -1,4 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { rutaCliente } from './rutasCliente.js';
 
 function formatearPrecio(precio) {
   return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(Number(precio) || 0);
@@ -8,6 +9,8 @@ function PedidoConfirmadoPage() {
   const { folio } = useParams();
   const location = useLocation();
   const pedidoDesdeNavegacion = location.state?.pedido;
+  // El resumen con datos personales solo se muestra durante la navegación de confirmación.
+  // Para consultar el pedido después, se exige folio y correo en la vista de seguimiento.
   const pedido = pedidoDesdeNavegacion?.folio === folio ? pedidoDesdeNavegacion : null;
 
   return (
@@ -24,17 +27,17 @@ function PedidoConfirmadoPage() {
           {pedido && (
             <div className="text-start border rounded-3 p-3 mb-4">
               <h2 className="h5 fw-bold">Resumen</h2>
-              <p className="mb-1"><strong>Nombre:</strong> {pedido.cliente.nombre}</p>
-              <p className="mb-1"><strong>Correo:</strong> {pedido.cliente.correo}</p>
-              <p className="mb-1"><strong>Entrega:</strong> {pedido.entrega.tipo}</p>
-              {pedido.entrega.transportista && <p className="mb-1"><strong>Empresa:</strong> {pedido.entrega.transportista}</p>}
+              <p className="mb-1"><strong>Nombre:</strong> {pedido.datosCliente?.nombre || pedido.cliente}</p>
+              <p className="mb-1"><strong>Correo:</strong> {pedido.datosCliente?.correo || pedido.correo}</p>
+              <p className="mb-1"><strong>Entrega:</strong> {pedido.entrega?.tipo || pedido.tipoEntrega}</p>
+              {pedido.entrega?.transportista && <p className="mb-1"><strong>Empresa:</strong> {pedido.entrega?.transportista || pedido.tipoEntrega}</p>}
               <p className="mb-1"><strong>Productos:</strong> {pedido.items.reduce((suma, item) => suma + item.cantidad, 0)} unidades</p>
               <p className="fw-bold mt-2 mb-0">Total: {formatearPrecio(pedido.total)}</p>
             </div>
           )}
           <div className="d-flex flex-wrap justify-content-center gap-2">
-            <Link to={`/seguimiento`} className="btn btn-primary">Seguir mi pedido</Link>
-            <Link to="/catalogo" className="btn btn-outline-secondary">Volver al catálogo</Link>
+            <Link to={rutaCliente(location.pathname, 'seguimiento')} className="btn btn-primary">Seguir mi pedido</Link>
+            <Link to={rutaCliente(location.pathname, 'catalogo')} className="btn btn-outline-secondary">Volver al catálogo</Link>
           </div>
           <p className="small text-secondary mt-4 mb-0">Los pedidos se almacenan localmente en este navegador. No se ha realizado un pago ni contratado un envío real.</p>
         </div>

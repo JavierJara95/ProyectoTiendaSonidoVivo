@@ -121,6 +121,74 @@ describe('CatalogoPage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('filtra los productos por precio mínimo', async () => {
+    const usuario = userEvent.setup();
+    renderCatalogo();
+
+    await usuario.type(
+      screen.getByRole('spinbutton', { name: /precio mínimo/i }),
+      '15000'
+    );
+
+    expect(
+      screen.getByRole('heading', { name: 'Ver detalle de Parlante de prueba' })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Ver detalle de Guitarra de prueba' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('filtra los productos por precio máximo', async () => {
+    const usuario = userEvent.setup();
+    renderCatalogo();
+
+    await usuario.type(
+      screen.getByRole('spinbutton', { name: /precio máximo/i }),
+      '15000'
+    );
+
+    expect(
+      screen.getByRole('heading', { name: 'Ver detalle de Guitarra de prueba' })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Ver detalle de Parlante de prueba' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('avisa si el precio mínimo supera al precio máximo', async () => {
+    const usuario = userEvent.setup();
+    renderCatalogo();
+
+    await usuario.type(
+      screen.getByRole('spinbutton', { name: /precio mínimo/i }),
+      '25000'
+    );
+    await usuario.type(
+      screen.getByRole('spinbutton', { name: /precio máximo/i }),
+      '10000'
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'el precio mínimo no supere al máximo'
+    );
+    expect(screen.getByRole('heading', { name: 'No encontramos productos' })).toBeInTheDocument();
+  });
+
+  it('limpia búsqueda, categoría y filtros de precio', async () => {
+    const usuario = userEvent.setup();
+    renderCatalogo();
+
+    await usuario.type(
+      screen.getByRole('spinbutton', { name: /precio máximo/i }),
+      '5000'
+    );
+    await usuario.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
+
+    expect(screen.getByRole('spinbutton', { name: /precio máximo/i }).value).toBe('');
+    expect(screen.getByRole('combobox', { name: /categoría/i })).toHaveValue('Todas');
+    expect(screen.getAllByRole('heading', { name: /ver detalle de/i })).toHaveLength(2);
+  });
+
   it('muestra un mensaje cuando no hay resultados', async () => {
     const usuario = userEvent.setup();
     renderCatalogo();

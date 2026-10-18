@@ -1,7 +1,8 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import productos from '../../data/productos.json';
 import { useCarrito } from '../../context/CarritoContext.jsx';
+import { rutaCliente } from './rutasCliente.js';
 
 function formatearPrecio(precio) {
   return new Intl.NumberFormat('es-CL', {
@@ -13,6 +14,7 @@ function formatearPrecio(precio) {
 
 function DetalleProductoPage() {
   const { codigo } = useParams();
+  const location = useLocation();
   const { agregarProducto, totalUnidades } = useCarrito();
   const [mensaje, setMensaje] = useState('');
 
@@ -23,7 +25,7 @@ function DetalleProductoPage() {
       <main className="container py-5">
         <h1 className="h3">Producto no encontrado</h1>
         <p>El producto solicitado no existe en el catálogo.</p>
-        <Link to="/catalogo" className="btn btn-primary">
+        <Link to={rutaCliente(location.pathname, 'catalogo')} className="btn btn-primary">
           Volver al catálogo
         </Link>
       </main>
@@ -38,7 +40,7 @@ function DetalleProductoPage() {
   return (
     <main className="container py-4">
       <nav aria-label="Ruta de navegación" className="mb-4">
-        <Link to="/catalogo">Catálogo</Link>
+        <Link to={rutaCliente(location.pathname, 'catalogo')}>Catálogo</Link>
         {' / '}
         <span>{producto.nombre}</span>
       </nav>
@@ -108,7 +110,7 @@ function DetalleProductoPage() {
               )}
 
               <Link
-                to="/carrito"
+                to={rutaCliente(location.pathname, 'carrito')}
                 className="btn btn-outline-secondary w-100 mt-3"
               >
                 Ver carrito ({totalUnidades})
@@ -118,7 +120,7 @@ function DetalleProductoPage() {
         </aside>
       </div>
 
-      <Link to="/catalogo" className="btn btn-outline-secondary mt-4">
+      <Link to={rutaCliente(location.pathname, 'catalogo')} className="btn btn-outline-secondary mt-4">
         Volver al catálogo
       </Link>
     </main>

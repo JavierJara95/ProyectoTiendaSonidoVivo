@@ -212,7 +212,11 @@ describe('Flujo de pedidos del cliente', () => {
     });
 
     expect(resultado.ok).toBe(true);
-    expect(resultado.pedido.entrega.empresa).toBe('Chilexpress');
+    expect(resultado.pedido.entrega.transportista).toBe('Chilexpress');
+    expect(resultado.pedido.tipoEntrega).toBe('Chilexpress');
+    expect(resultado.pedido.cliente).toBe('Cliente de prueba');
+    expect(resultado.pedido.correo).toBe('cliente@example.com');
+    expect(typeof resultado.pedido.id).toBe('number');
   });
 
   it('rechaza registrar un pedido sin productos', () => {
@@ -273,7 +277,7 @@ describe('Flujo de pedidos del cliente', () => {
     expect(screen.getByText(pedido.folio)).toBeTruthy();
     expect(screen.getByText(pedido.estado)).toBeTruthy();
     expect(screen.getByText('Cliente de prueba')).toBeTruthy();
-    expect(screen.getByText('retiro')).toBeTruthy();
+    expect(screen.getByText('Retiro en tienda')).toBeTruthy();
   });
 
   it('muestra la empresa transportista para pedidos con despacho a domicilio', () => {
@@ -286,6 +290,21 @@ describe('Flujo de pedidos del cliente', () => {
     consultarSeguimiento(pedido.folio, clientePrueba.correo);
 
     expect(screen.getByText('Chilexpress')).toBeTruthy();
+  });
+
+  it('muestra el número de seguimiento actualizado por vendedor', () => {
+    const resultado = crearPedido({
+      tipo: 'despacho',
+      transportista: 'Chilexpress',
+    });
+    const pedido = { ...resultado.pedido, estado: 'Despachado', numeroSeguimiento: 'CHX458921' };
+    localStorage.setItem('sonidoVivo_pedidos', JSON.stringify([pedido]));
+    renderConRutas('/seguimiento');
+
+    consultarSeguimiento(pedido.folio, clientePrueba.correo);
+
+    expect(screen.getByText('Despachado')).toBeTruthy();
+    expect(screen.getByText('CHX458921')).toBeTruthy();
   });
 
   it('muestra los productos y el total del pedido en el seguimiento', () => {

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCarrito } from '../../context/CarritoContext.jsx';
 import { registrarPedido } from '../../data/pedidos.js';
+import { rutaCliente } from './rutasCliente.js';
 
 function formatearPrecio(precio) {
   return new Intl.NumberFormat('es-CL', {
@@ -32,6 +33,7 @@ function CarritoPage() {
     vaciarCarrito,
   } = useCarrito();
   const navigate = useNavigate();
+  const location = useLocation();
   const [formulario, setFormulario] = useState(FORMULARIO_INICIAL);
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState('');
@@ -96,7 +98,7 @@ function CarritoPage() {
     }
 
     vaciarCarrito();
-    navigate(`/pedido-confirmado/${resultado.pedido.folio}`, {
+    navigate(rutaCliente(location.pathname, `pedido-confirmado/${encodeURIComponent(resultado.pedido.folio)}`), {
       state: { pedido: resultado.pedido },
     });
   }
@@ -108,7 +110,7 @@ function CarritoPage() {
           <h1 className="display-6 fw-bold">Mi carrito</h1>
           <p className="text-secondary mb-0">Revisa tus productos y completa los datos para confirmar el pedido.</p>
         </div>
-        <Link to="/catalogo" className="btn btn-outline-primary">Seguir comprando</Link>
+        <Link to={rutaCliente(location.pathname, 'catalogo')} className="btn btn-outline-primary">Seguir comprando</Link>
       </header>
 
       {items.length === 0 ? (
@@ -116,7 +118,7 @@ function CarritoPage() {
           <div className="display-3 mb-3" aria-hidden="true">🛒</div>
           <h2 className="h4 fw-bold">Tu carrito está vacío</h2>
           <p className="text-secondary">Explora el catálogo y agrega tus productos favoritos.</p>
-          <Link to="/catalogo" className="btn btn-primary">Ir al catálogo</Link>
+          <Link to={rutaCliente(location.pathname, 'catalogo')} className="btn btn-primary">Ir al catálogo</Link>
         </section>
       ) : (
         <div className="row g-4">
