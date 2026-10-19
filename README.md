@@ -1,9 +1,10 @@
-# Sonido Vivo — Frontend Integrado
+# Sonido Vivo — Frontend
 
 Aplicación web desarrollada para la **Tienda Sonido Vivo**, construida con **React + Vite** e integrada a partir de tres módulos principales: **Administrador, Vendedor y Cliente**.
 
 La versión integrada utiliza como base visual el diseño de la rama `feature/admin-gestion`, manteniendo una interfaz general consistente en todo el sistema.
 
+[Enlace a video Explicativo en Drive](https://drive.google.com/file/d/1OZOt3en5nkbnvDcwwqDsFq7IJFjG5EnG/view?usp=drive_link)
 ---
 
 ## Integrantes y módulos
