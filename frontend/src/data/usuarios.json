@@ -1,0 +1,23 @@
+[
+  {
+    "id": "usr-admin",
+    "nombre": "Esteban González",
+    "email": "admin@sonidovivo.cl",
+    "rol": "admin",
+    "activo": true
+  },
+  {
+    "id": "usr-vendedor",
+    "nombre": "Javier",
+    "email": "vendedor@sonidovivo.cl",
+    "rol": "vendedor",
+    "activo": true
+  },
+  {
+    "id": "usr-cliente",
+    "nombre": "Valentina",
+    "email": "cliente@sonidovivo.cl",
+    "rol": "cliente",
+    "activo": true
+  }
+]
