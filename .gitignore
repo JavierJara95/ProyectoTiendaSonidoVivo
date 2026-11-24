@@ -1,0 +1,10 @@
+# Claves y configuracion privada (solo Windows local)
+config.local.bat
+# Artefactos locales
+**/target/
+**/node_modules/
+**/dist/
+**/coverage/
+**/.env
+**/.env.local
+**/*.log

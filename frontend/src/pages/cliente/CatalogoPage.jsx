@@ -23,16 +23,6 @@ function CatalogoPage() {
       .finally(() => { if (active) setCargando(false); });
     return () => { active = false; };
   }, []);
-  const [productos, setProductos] = useState([]);
-  const [cargando, setCargando] = useState(true);
-  const [errorCarga, setErrorCarga] = useState('');
-  useEffect(() => {
-    let active = true;
-    listProducts().then(data => { if (active) setProductos(data); })
-      .catch(err => { if (active) setErrorCarga(err.message); })
-      .finally(() => { if (active) setCargando(false); });
-    return () => { active = false; };
-  }, []);
   const [busqueda, setBusqueda] = useState('');
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('Todas');
   const [precioMinimo, setPrecioMinimo] = useState('');
@@ -126,8 +116,6 @@ function CatalogoPage() {
         </Link>
       </div>
 
-      {cargando && <div className="alert alert-info" role="status">Cargando catálogo desde el backend…</div>}
-      {errorCarga && <div className="alert alert-danger" role="alert">{errorCarga}</div>}
       {cargando && <div className="alert alert-info" role="status">Cargando catálogo desde el backend…</div>}
       {errorCarga && <div className="alert alert-danger" role="alert">{errorCarga}</div>}
       {mensaje && <div className="alert alert-info" role="status">{mensaje}</div>}
