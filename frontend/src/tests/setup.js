@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach } from "vitest";
+import { installMockBackend } from "./mockBackend";
 import { webcrypto } from "node:crypto";
 Object.defineProperty(globalThis, "crypto", {
   value: webcrypto,
@@ -15,5 +16,6 @@ HTMLDialogElement.prototype.close = function () {
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
+  installMockBackend();
 });
 afterEach(() => cleanup());

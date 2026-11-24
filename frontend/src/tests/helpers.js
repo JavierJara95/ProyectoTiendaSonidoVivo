@@ -1,36 +1,13 @@
-import { hashPassword } from "../utils/password";
-import { KEYS } from "../utils/constants";
-import { writeStorage } from "../utils/storage";
-import { demoUsers, DEMO_PASSWORD } from "../data/demo";
-import productos from "../data/admin/productos.json";
-export async function seed({
-  role = "admin",
-  activo = true,
-  orders = [],
-} = {}) {
-  const credential = await hashPassword(DEMO_PASSWORD);
-  const users = demoUsers.map((user) => ({
-    ...user,
-    credential,
-    activo: user.rol === role ? activo : user.activo,
+import { demoUsers } from '../data/demo';
+import { KEYS } from '../utils/constants';
+import { installMockBackend } from './mockBackend';
+export async function seed({ role = 'admin', activo = true, orders = [] } = {}) {
+  const users = demoUsers.map(u => ({ ...u, activo: u.rol === role ? activo : u.activo }));
+  installMockBackend({ users, orders });
+  const user = users.find(u => u.rol === role);
+  sessionStorage.setItem(KEYS.session, JSON.stringify({
+    token: 'JWT_SIMULADO_SOLO_TEST', expiresAt: Date.now() + 600000, user,
   }));
-  writeStorage(KEYS.users, users);
-  writeStorage(KEYS.products, productos);
-  writeStorage(KEYS.orders, orders);
-  const user = users.find((item) => item.rol === role);
-  sessionStorage.setItem(
-    KEYS.session,
-    JSON.stringify({
-      userId: user.id,
-      token: "token-de-prueba",
-      expiresAt: Date.now() + 60000,
-    }),
-  );
   return users;
 }
-export const userValues = {
-  nombre: "Ana Música",
-  email: "ana@correo.cl",
-  password: "Musica2026!",
-  rol: "vendedor",
-};
+export const userValues = { nombre: 'Ana Música', email: 'ana@correo.cl', password: 'Musica2026!', rol: 'vendedor' };

@@ -61,7 +61,7 @@ describe("Componentes y rutas del módulo Esteban", () => {
     await seed();
     renderAt(<GestionUsuariosPage />);
     const user = userEvent.setup();
-    expect(screen.getByText("admin@sonidovivo.cl")).toBeVisible();
+    expect(await screen.findByText("admin@sonidovivo.cl")).toBeVisible();
     await user.type(
       screen.getByRole("textbox", { name: "Buscar usuarios" }),
       "Javier",

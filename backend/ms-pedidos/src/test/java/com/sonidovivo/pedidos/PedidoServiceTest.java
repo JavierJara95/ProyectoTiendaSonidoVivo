@@ -65,11 +65,16 @@ class PedidoServiceTest {
 
     @Test void dejaIncidenciaAnteFalloDeCatalogoLuegoDeGuardarPedido() {
         catalogoDisponible();
+        // La compensacion consulta el pedido persistido para detectar descuentos previos.
+        // Mockito debe devolver el mismo pedido guardado, no null.
+        final Pedido[] creado = new Pedido[1];
         when(persistencia.guardarNuevo(any())).thenAnswer(inv -> {
             Pedido p = inv.getArgument(0);
             ReflectionTestUtils.setField(p, "id", 11L);
+            creado[0] = p;
             return p;
         });
+        when(persistencia.buscar(11L)).thenAnswer(inv -> creado[0]);
         doThrow(new IntegracionCatalogoException("Sin stock", true)).when(catalogo).descontarStock(7L, 2);
         IncidenciaStockException error = assertThrows(IncidenciaStockException.class,
                 () -> servicio.crear("usr-42", request()));

@@ -29,10 +29,11 @@ describe('Entrada integrable del módulo cliente', () => {
       </MemoryRouter>
     );
 
-    await usuario.click(screen.getAllByRole('link', { name: 'Ver detalle del producto' })[0]);
+    const enlacesDetalle = await screen.findAllByRole('link', { name: 'Ver detalle del producto' });
+    await usuario.click(enlacesDetalle[0]);
 
     expect(
-      screen.getByRole('heading', { name: 'Guitarra Acústica Folk' })
+      await screen.findByRole('heading', { name: 'Guitarra Acústica Folk' })
     ).toBeInTheDocument();
     expect(screen.getByText('Código: GA001')).toBeInTheDocument();
   });

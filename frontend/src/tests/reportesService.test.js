@@ -9,7 +9,7 @@ const order = {
   fecha: "2026-10-01",
   clienteNombre: "Ana",
   estado: "entregado",
-  estadoPago: "aprobado",
+  estadoStock: "CONFIRMADO",
   tipoEntrega: "retiro",
   total: 200,
   items: [
@@ -22,12 +22,12 @@ const order = {
   ],
 };
 describe("Reportes de ventas y exportación", () => {
-  it("excluye pagos pendientes y pedidos cancelados de los ingresos", () => {
+  it("excluye pedidos cuyo descuento de stock no está confirmado", () => {
     const result = calculateReport(
       [
         order,
-        { ...order, estadoPago: "pendiente" },
-        { ...order, estado: "cancelado" },
+        { ...order, estadoStock: "INCIDENCIA" },
+        { ...order, estadoStock: "PENDIENTE" },
       ],
       products,
     );

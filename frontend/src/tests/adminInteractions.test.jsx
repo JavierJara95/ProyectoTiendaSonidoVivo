@@ -28,6 +28,7 @@ describe("Interacciones de administración y registro", () => {
     await seed();
     renderAt(<GestionUsuariosPage />);
     const user = userEvent.setup();
+    await screen.findByText("admin@sonidovivo.cl");
     await user.click(screen.getByRole("button", { name: "Crear usuario" }));
     await user.type(screen.getByLabelText("Nombre completo"), "Ana Música");
     await user.type(
@@ -45,6 +46,7 @@ describe("Interacciones de administración y registro", () => {
     await seed();
     renderAt(<GestionUsuariosPage />);
     const user = userEvent.setup();
+    await screen.findByText("vendedor@sonidovivo.cl");
     await user.click(screen.getByRole("button", { name: "Desactivar Javier" }));
     expect(screen.getByRole("dialog")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Confirmar" }));
@@ -75,7 +77,7 @@ describe("Interacciones de administración y registro", () => {
     await seed();
     renderAt(<ReportesVentasPage />);
     const user = userEvent.setup();
-    expect(screen.getByRole("button", { name: "Exportar CSV" })).toBeDisabled();
+    expect(await screen.findByRole("button", { name: "Exportar CSV" })).toBeDisabled();
     await user.clear(screen.getByLabelText("Desde"));
     await user.type(screen.getByLabelText("Desde"), "2026-10-15");
     await user.clear(screen.getByLabelText("Hasta"));

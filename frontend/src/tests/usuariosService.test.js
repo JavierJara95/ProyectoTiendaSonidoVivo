@@ -11,14 +11,12 @@ import { KEYS } from "../utils/constants";
 import { DEMO_PASSWORD } from "../data/demo";
 import { seed, userValues } from "./helpers";
 describe("Gestión de usuarios", () => {
-  it("crea un usuario persistido con contraseña derivada y rol asignado", async () => {
+  it("crea un usuario mediante la API y asigna rol", async () => {
     await seed();
     const result = await createUser(userValues);
     expect(result.rol).toBe("vendedor");
-    expect(listUsers()).toHaveLength(4);
-    const stored = localStorage.getItem(KEYS.users);
-    expect(stored).not.toContain(userValues.password);
-    expect(stored).not.toContain(DEMO_PASSWORD);
+    expect(await listUsers()).toHaveLength(4);
+    expect(JSON.stringify(await listUsers())).not.toContain(userValues.password);
     await expect(
       login(userValues.email, userValues.password),
     ).resolves.toMatchObject({ id: result.id });
@@ -28,7 +26,7 @@ describe("Gestión de usuarios", () => {
     await expect(
       createUser({ ...userValues, email: " ADMIN@SONIDOVIVO.CL " }),
     ).rejects.toThrow("Ya existe");
-    expect(listUsers()).toHaveLength(3);
+    expect(await listUsers()).toHaveLength(3);
   });
   it("el registro público fuerza el rol cliente", async () => {
     await seed();
@@ -97,6 +95,6 @@ describe("Gestión de usuarios", () => {
   it("rechaza un CRUD de usuarios sin permisos", async () => {
     await seed({ role: "cliente" });
     await expect(createUser(userValues)).rejects.toThrow("permiso");
-    expect(() => listUsers()).toThrow("permiso");
+    await expect(listUsers()).rejects.toThrow("permiso");
   });
 });

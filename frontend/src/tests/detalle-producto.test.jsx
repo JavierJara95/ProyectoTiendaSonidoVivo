@@ -1,32 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import DetalleProductoPage from '../pages/cliente/DetalleProductoPage.jsx';
 
-vi.mock('../data/productos.json', () => ({
-  default: [
-    {
-      codigo: 'TEST-001',
-      categoria: 'Instrumentos',
-      nombre: 'Guitarra de prueba',
-      marca: 'Marca A',
-      modelo: 'Modelo A',
-      stock: 3,
-      precio: 10000,
-      descripcion: 'Producto utilizado en pruebas.',
-    },
-    {
-      codigo: 'TEST-002',
-      categoria: 'Audio',
-      nombre: 'Parlante de prueba',
-      marca: 'Marca B',
-      modelo: 'Modelo B',
-      stock: 0,
-      precio: 20000,
-      descripcion: 'Producto utilizado en pruebas.',
-    },
-  ],
+vi.mock('../services/catalogoService', () => ({
+  getProductByCode: vi.fn(async codigo => {
+    const products = [
+      {id:1, codigo:'TEST-001', categoria:'Instrumentos', nombre:'Guitarra de prueba', marca:'Marca A', modelo:'Modelo A', stock:3, precio:10000, descripcion:'Producto utilizado en pruebas.'},
+      {id:2, codigo:'TEST-002', categoria:'Audio', nombre:'Parlante de prueba', marca:'Marca B', modelo:'Modelo B', stock:0, precio:20000, descripcion:'Producto utilizado en pruebas.'},
+    ];
+    const found = products.find(p=>p.codigo===codigo);
+    if (!found) throw new Error('Producto no encontrado en catálogo.');
+    return found;
+  }),
 }));
 
 vi.mock('../context/CarritoContext.jsx', () => ({
@@ -52,8 +39,8 @@ describe('DetalleProductoPage', () => {
     });
   });
 
-  function renderDetalle(codigo = 'TEST-001') {
-    return render(
+  async function renderDetalle(codigo = 'TEST-001') {
+    const view = render(
       <MemoryRouter initialEntries={[`/producto/${codigo}`]}>
         <Routes>
           <Route
@@ -63,10 +50,12 @@ describe('DetalleProductoPage', () => {
         </Routes>
       </MemoryRouter>
     );
+    await waitFor(() => expect(screen.queryByText('Cargando producto…')).not.toBeInTheDocument());
+    return view;
   }
 
-  it('muestra los datos del producto seleccionado', () => {
-    renderDetalle();
+  it('muestra los datos del producto seleccionado', async () => {
+    await renderDetalle();
 
     expect(
       screen.getByRole('heading', { name: 'Guitarra de prueba' })
@@ -94,7 +83,7 @@ describe('DetalleProductoPage', () => {
 
   it('permite agregar un producto disponible al carrito', async () => {
     const user = userEvent.setup();
-    renderDetalle();
+    await renderDetalle();
 
     await user.click(
       screen.getByRole('button', { name: 'Agregar al carrito' })
@@ -109,8 +98,8 @@ describe('DetalleProductoPage', () => {
     );
   });
 
-  it('deshabilita la compra de un producto sin stock', () => {
-    renderDetalle('TEST-002');
+  it('deshabilita la compra de un producto sin stock', async () => {
+    await renderDetalle('TEST-002');
 
     expect(
       screen.getByRole('heading', { name: 'Parlante de prueba' })
@@ -123,8 +112,8 @@ describe('DetalleProductoPage', () => {
     expect(agregarProducto).not.toHaveBeenCalled();
   });
 
-  it('muestra un mensaje si el producto no existe', () => {
-    renderDetalle('NO-EXISTE');
+  it('muestra un mensaje si el producto no existe', async () => {
+    await renderDetalle('NO-EXISTE');
 
     expect(
       screen.getByRole('heading', { name: 'Producto no encontrado' })

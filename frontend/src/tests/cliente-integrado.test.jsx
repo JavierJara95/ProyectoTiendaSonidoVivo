@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import {
   registrarPedido,
@@ -10,6 +10,23 @@ import CarritoPage from '../pages/cliente/CarritoPage.jsx';
 import PedidoConfirmadoPage from '../pages/cliente/PedidoConfirmadoPage.jsx';
 import SeguimientoPedidoPage from '../pages/cliente/SeguimientoPedidoPage.jsx';
 import { CarritoProvider, useCarrito } from '../context/CarritoContext.jsx';
+// Las pantallas reales dependen de AuthProvider y de ms-pedidos (EP3).
+// Se simula la respuesta de seguimiento sin tocar el backend ni MySQL.
+vi.mock('../context/AuthContext', () => ({ useAuth: () => ({user: null,ready:true}) }));
+vi.mock('../services/pedidosService', () => ({
+  trackOrder: vi.fn(async (folio) => {
+    const {buscarPedido} = await import('../data/pedidos.js');
+    const p = buscarPedido(folio, 'cliente@example.com');
+    if(!p) throw new Error('No encontramos un pedido con ese folio.');
+    return {...p,fechaCreacion:p.fecha,clienteNombre:p.cliente,clienteCorreo:p.correo,
+      estadoDescripcion:p.estado,entrega:{...p.entrega,numeroSeguimiento:p.numeroSeguimiento}};
+  }),
+  normalizeOrder: vi.fn(p=> ({...p,fecha:p.fechaCreacion,cliente:p.clienteNombre,
+    numeroSeguimiento:p.entrega?.numeroSeguimiento || '',tipoEntrega:p.entrega?.tipo || ''})),
+  createOrder: vi.fn(async () => ({ id:1,folio:'SV-TEST',fechaCreacion:new Date().toISOString(),
+    estadoDescripcion:'En preparación',items:[],total:0,entrega:{tipo:'Retiro en tienda'} })),
+}));
+
 
 const clientePrueba = {
   nombre: 'Cliente de prueba',
@@ -122,7 +139,7 @@ describe('Flujo de pedidos del cliente', () => {
     __limpiarPedidosParaPruebas();
   });
 
-  it('muestra el mensaje cuando el carrito está vacío', () => {
+  it('muestra el mensaje cuando el carrito está vacío', async () => {
     renderConRutas('/carrito');
 
     expect(
@@ -134,7 +151,7 @@ describe('Flujo de pedidos del cliente', () => {
     ).toBeTruthy();
   });
 
-  it('muestra el producto, el precio y el resumen del carrito', () => {
+  it('muestra el producto, el precio y el resumen del carrito', async () => {
     renderConRutas('/carrito', null, [productoPrueba]);
     cargarProducto();
 
@@ -143,7 +160,7 @@ describe('Flujo de pedidos del cliente', () => {
     expect(screen.getByText('Resumen de compra')).toBeTruthy();
   });
 
-  it('permite cambiar la cantidad de un producto', () => {
+  it('permite cambiar la cantidad de un producto', async () => {
     renderConRutas('/carrito', null, [productoPrueba]);
     cargarProducto();
 
@@ -154,7 +171,7 @@ describe('Flujo de pedidos del cliente', () => {
     expect(screen.getByLabelText('Cantidad').value).toBe('3');
   });
 
-  it('permite quitar un producto del carrito', () => {
+  it('permite quitar un producto del carrito', async () => {
     renderConRutas('/carrito', null, [productoPrueba]);
     cargarProducto();
 
@@ -165,7 +182,7 @@ describe('Flujo de pedidos del cliente', () => {
     ).toBeTruthy();
   });
 
-  it('permite vaciar el carrito', () => {
+  it('permite vaciar el carrito', async () => {
     renderConRutas('/carrito', null, [productoPrueba]);
     cargarProducto();
 
@@ -176,7 +193,7 @@ describe('Flujo de pedidos del cliente', () => {
     ).toBeTruthy();
   });
 
-  it('muestra errores si se confirma sin completar los datos obligatorios', () => {
+  it('muestra errores si se confirma sin completar los datos obligatorios', async () => {
     renderConRutas('/carrito', null, [productoPrueba]);
     cargarProducto();
 
@@ -194,7 +211,7 @@ describe('Flujo de pedidos del cliente', () => {
     ).toBeTruthy();
   });
 
-  it('registra un pedido con retiro en tienda y genera un folio', () => {
+  it('registra un pedido con retiro en tienda y genera un folio', async () => {
     const resultado = crearPedido();
 
     expect(resultado.ok).toBe(true);
@@ -204,7 +221,7 @@ describe('Flujo de pedidos del cliente', () => {
     ).not.toBeNull();
   });
 
-  it('registra un pedido con despacho por Chilexpress', () => {
+  it('registra un pedido con despacho por Chilexpress', async () => {
     const resultado = crearPedido({
       tipo: 'despacho',
       empresa: 'Chilexpress',
@@ -219,7 +236,7 @@ describe('Flujo de pedidos del cliente', () => {
     expect(typeof resultado.pedido.id).toBe('number');
   });
 
-  it('rechaza registrar un pedido sin productos', () => {
+  it('rechaza registrar un pedido sin productos', async () => {
     const resultado = registrarPedido({
       items: [],
       cliente: clientePrueba,
@@ -230,7 +247,7 @@ describe('Flujo de pedidos del cliente', () => {
     expect(resultado.ok).toBe(false);
   });
 
-  it('muestra la página de seguimiento sin resultados iniciales', () => {
+  it('muestra la página de seguimiento sin resultados iniciales', async () => {
     renderConRutas('/seguimiento');
 
     expect(
@@ -246,32 +263,35 @@ describe('Flujo de pedidos del cliente', () => {
     ).toBeNull();
   });
 
-  it('muestra un error cuando el pedido no existe', () => {
+  it('muestra un error cuando el pedido no existe', async () => {
     renderConRutas('/seguimiento');
 
     consultarSeguimiento('SV-NO-EXISTE', 'cliente@example.com');
+    await waitFor(() => expect(screen.getByRole('button', {name: 'Consultar estado'})).toBeEnabled());
 
     expect(
       screen.getByRole('alert').textContent
     ).toContain('No encontramos un pedido');
   });
 
-  it('muestra un error cuando el correo no coincide', () => {
+  it('muestra un error cuando el correo no coincide', async () => {
     const pedido = crearPedido().pedido;
     renderConRutas('/seguimiento');
 
     consultarSeguimiento(pedido.folio, 'otro@example.com');
+    await waitFor(() => expect(screen.getByRole('button', {name: 'Consultar estado'})).toBeEnabled());
 
     expect(
       screen.getByRole('alert').textContent
-    ).toContain('No encontramos un pedido');
+    ).toContain('El correo no coincide');
   });
 
-  it('muestra el estado y los datos de un pedido encontrado', () => {
+  it('muestra el estado y los datos de un pedido encontrado', async () => {
     const pedido = crearPedido().pedido;
     renderConRutas('/seguimiento');
 
     consultarSeguimiento(pedido.folio, clientePrueba.correo);
+    await waitFor(() => expect(screen.getByRole('button', {name: 'Consultar estado'})).toBeEnabled());
 
     expect(screen.getByText('Pedido encontrado')).toBeTruthy();
     expect(screen.getByText(pedido.folio)).toBeTruthy();
@@ -280,7 +300,7 @@ describe('Flujo de pedidos del cliente', () => {
     expect(screen.getByText('Retiro en tienda')).toBeTruthy();
   });
 
-  it('muestra la empresa transportista para pedidos con despacho a domicilio', () => {
+  it('muestra la empresa transportista para pedidos con despacho a domicilio', async () => {
     const pedido = crearPedido({
       tipo: 'Despacho a domicilio',
       transportista: 'Chilexpress',
@@ -288,11 +308,12 @@ describe('Flujo de pedidos del cliente', () => {
 
     renderConRutas('/seguimiento');
     consultarSeguimiento(pedido.folio, clientePrueba.correo);
+    await waitFor(() => expect(screen.getByRole('button', {name: 'Consultar estado'})).toBeEnabled());
 
     expect(screen.getByText('Chilexpress')).toBeTruthy();
   });
 
-  it('muestra el número de seguimiento actualizado por vendedor', () => {
+  it('muestra el número de seguimiento actualizado por vendedor', async () => {
     const resultado = crearPedido({
       tipo: 'despacho',
       transportista: 'Chilexpress',
@@ -302,23 +323,25 @@ describe('Flujo de pedidos del cliente', () => {
     renderConRutas('/seguimiento');
 
     consultarSeguimiento(pedido.folio, clientePrueba.correo);
+    await waitFor(() => expect(screen.getByRole('button', {name: 'Consultar estado'})).toBeEnabled());
 
     expect(screen.getByText('Despachado')).toBeTruthy();
     expect(screen.getByText('CHX458921')).toBeTruthy();
   });
 
-  it('muestra los productos y el total del pedido en el seguimiento', () => {
+  it('muestra los productos y el total del pedido en el seguimiento', async () => {
     const pedido = crearPedido().pedido;
     renderConRutas('/seguimiento');
 
     consultarSeguimiento(pedido.folio, clientePrueba.correo);
+    await waitFor(() => expect(screen.getByRole('button', {name: 'Consultar estado'})).toBeEnabled());
 
     expect(screen.getByRole('heading', { name: 'Productos' })).toBeTruthy();
     expect(screen.getByText(/Guitarra de prueba × 2/)).toBeTruthy();
     expect(screen.getAllByText(/100\.000/).length).toBeGreaterThan(0);
   });
 
-  it('incluye enlaces para volver al catálogo y al carrito', () => {
+  it('incluye enlaces para volver al catálogo y al carrito', async () => {
     renderConRutas('/seguimiento');
 
     expect(
@@ -330,7 +353,7 @@ describe('Flujo de pedidos del cliente', () => {
     ).toBeTruthy();
   });
 
-  it('muestra la confirmación y el folio del pedido', () => {
+  it('muestra la confirmación y el folio del pedido', async () => {
     const pedido = crearPedido().pedido;
     renderConRutas(`/pedido-confirmado/${pedido.folio}`, pedido);
 
@@ -342,7 +365,7 @@ describe('Flujo de pedidos del cliente', () => {
     expect(screen.getByText('Resumen')).toBeTruthy();
   });
 
-  it('muestra los datos del cliente y el total del pedido', () => {
+  it('muestra los datos del cliente y el total del pedido', async () => {
     const pedido = crearPedido().pedido;
     renderConRutas(`/pedido-confirmado/${pedido.folio}`, pedido);
 
@@ -352,7 +375,7 @@ describe('Flujo de pedidos del cliente', () => {
     expect(screen.getByText(/2\s*unidades/)).toBeTruthy();
   });
 
-  it('muestra la empresa transportista cuando existe', () => {
+  it('muestra la empresa transportista cuando existe', async () => {
     const pedido = crearPedido({
       tipo: 'despacho',
       transportista: 'Chilexpress',
@@ -363,7 +386,7 @@ describe('Flujo de pedidos del cliente', () => {
     expect(screen.getByText('Chilexpress')).toBeTruthy();
   });
 
-  it('oculta el resumen si no se recibe un pedido', () => {
+  it('oculta el resumen si no se recibe un pedido', async () => {
     renderConRutas('/pedido-confirmado/SV-PRUEBA');
 
     expect(
@@ -373,14 +396,14 @@ describe('Flujo de pedidos del cliente', () => {
     expect(screen.queryByText('Resumen')).toBeNull();
   });
 
-  it('oculta el resumen si el folio no coincide con el pedido recibido', () => {
+  it('oculta el resumen si el folio no coincide con el pedido recibido', async () => {
     const pedido = crearPedido().pedido;
     renderConRutas('/pedido-confirmado/SV-OTRO-FOLIO', pedido);
 
     expect(screen.queryByText('Resumen')).toBeNull();
   });
 
-  it('incluye enlaces para seguir el pedido y volver al catálogo', () => {
+  it('incluye enlaces para seguir el pedido y volver al catálogo', async () => {
     const pedido = crearPedido().pedido;
     renderConRutas(`/pedido-confirmado/${pedido.folio}`, pedido);
 

@@ -5,29 +5,11 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import CatalogoPage from '../pages/cliente/CatalogoPage.jsx';
 
-vi.mock('../data/productos.json', () => ({
-  default: [
-    {
-      codigo: 'TEST-001',
-      categoria: 'Instrumentos',
-      nombre: 'Guitarra de prueba',
-      marca: 'Marca A',
-      modelo: 'Modelo A',
-      stock: 3,
-      precio: 10000,
-      descripcion: 'Producto utilizado en pruebas.',
-    },
-    {
-      codigo: 'TEST-002',
-      categoria: 'Audio',
-      nombre: 'Parlante de prueba',
-      marca: 'Marca B',
-      modelo: 'Modelo B',
-      stock: 0,
-      precio: 20000,
-      descripcion: 'Producto utilizado en pruebas.',
-    },
-  ],
+vi.mock('../services/catalogoService', () => ({
+  listProducts: vi.fn(async () => [
+    {id: 1, codigo:'TEST-001', categoria:'Instrumentos', nombre:'Guitarra de prueba', marca:'Marca A', modelo:'Modelo A', stock:3, precio:10000, descripcion:'Producto utilizado en pruebas.'},
+    {id: 2, codigo:'TEST-002', categoria:'Audio', nombre:'Parlante de prueba', marca:'Marca B', modelo:'Modelo B', stock:0, precio:20000, descripcion:'Producto utilizado en pruebas.'},
+  ]),
 }));
 
 vi.mock('../context/CarritoContext.jsx', () => ({
@@ -53,16 +35,18 @@ describe('CatalogoPage', () => {
     });
   });
 
-  function renderCatalogo() {
-    return render(
+  async function renderCatalogo() {
+    const view = render(
       <MemoryRouter>
         <CatalogoPage />
       </MemoryRouter>
     );
+    await screen.findByRole('heading', {name:'Ver detalle de Guitarra de prueba'});
+    return view;
   }
 
-  it('muestra los productos del catálogo', () => {
-    renderCatalogo();
+  it('muestra los productos del catálogo', async () => {
+    await renderCatalogo();
 
     expect(
       screen.getByRole('heading', {
@@ -79,7 +63,7 @@ describe('CatalogoPage', () => {
 
   it('filtra los productos por nombre', async () => {
     const usuario = userEvent.setup();
-    renderCatalogo();
+    await renderCatalogo();
 
     await usuario.type(
       screen.getByRole('searchbox', { name: /buscar productos/i }),
@@ -101,7 +85,7 @@ describe('CatalogoPage', () => {
 
   it('filtra los productos por categoría', async () => {
     const usuario = userEvent.setup();
-    renderCatalogo();
+    await renderCatalogo();
 
     await usuario.selectOptions(
       screen.getByRole('combobox', { name: /categoría/i }),
@@ -123,7 +107,7 @@ describe('CatalogoPage', () => {
 
   it('filtra los productos por precio mínimo', async () => {
     const usuario = userEvent.setup();
-    renderCatalogo();
+    await renderCatalogo();
 
     await usuario.type(
       screen.getByRole('spinbutton', { name: /precio mínimo/i }),
@@ -140,7 +124,7 @@ describe('CatalogoPage', () => {
 
   it('filtra los productos por precio máximo', async () => {
     const usuario = userEvent.setup();
-    renderCatalogo();
+    await renderCatalogo();
 
     await usuario.type(
       screen.getByRole('spinbutton', { name: /precio máximo/i }),
@@ -157,7 +141,7 @@ describe('CatalogoPage', () => {
 
   it('avisa si el precio mínimo supera al precio máximo', async () => {
     const usuario = userEvent.setup();
-    renderCatalogo();
+    await renderCatalogo();
 
     await usuario.type(
       screen.getByRole('spinbutton', { name: /precio mínimo/i }),
@@ -176,7 +160,7 @@ describe('CatalogoPage', () => {
 
   it('limpia búsqueda, categoría y filtros de precio', async () => {
     const usuario = userEvent.setup();
-    renderCatalogo();
+    await renderCatalogo();
 
     await usuario.type(
       screen.getByRole('spinbutton', { name: /precio máximo/i }),
@@ -191,7 +175,7 @@ describe('CatalogoPage', () => {
 
   it('muestra un mensaje cuando no hay resultados', async () => {
     const usuario = userEvent.setup();
-    renderCatalogo();
+    await renderCatalogo();
 
     await usuario.type(
       screen.getByRole('searchbox', { name: /buscar productos/i }),
@@ -207,7 +191,7 @@ describe('CatalogoPage', () => {
 
   it('agrega un producto disponible al carrito', async () => {
     const usuario = userEvent.setup();
-    renderCatalogo();
+    await renderCatalogo();
 
     const botones = screen.getAllByRole('button', {
       name: 'Agregar al carrito',
@@ -226,8 +210,8 @@ describe('CatalogoPage', () => {
     );
   });
 
-  it('deshabilita el botón de un producto sin stock', () => {
-    renderCatalogo();
+  it('deshabilita el botón de un producto sin stock', async () => {
+    await renderCatalogo();
 
     expect(
       screen.getByRole('button', { name: 'Sin stock' })
