@@ -1,8 +1,8 @@
-import { KEYS } from "../utils/constants";
-import { readStorage } from "../utils/storage";
+import { listProducts } from './catalogoService';
+import { allOrders, normalizeOrder } from './pedidosService';
 import { requireAdmin } from "./authService";
 export function isSale(order) {
-  return order.estadoPago === "aprobado" && order.estado !== "cancelado";
+  return order.estadoStock === "CONFIRMADO"; // pedido confirmado con stock reservado; NO significa pago aprobado
 }
 export function calculateReport(
   orders,
@@ -64,15 +64,12 @@ export function calculateReport(
     ),
   };
 }
-export function getReport(filters) {
+export async function getReport(filters) {
   requireAdmin();
-  return calculateReport(
-    readStorage(KEYS.orders),
-    readStorage(KEYS.products),
-    filters,
-  );
+  const [orders, products] = await Promise.all([allOrders(), listProducts()]);
+  return calculateReport(orders.map(normalizeOrder), products, filters);
 }
-export function getProducts() {
+export async function getProducts() {
   requireAdmin();
-  return readStorage(KEYS.products);
+  return listProducts();
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Download,
   CircleDollarSign,
@@ -6,8 +6,8 @@ import {
   Package,
   ReceiptText,
 } from "../../components/ui/Icons";
-import { useStoredData } from "../../hooks/useStoredData";
-import { KEYS } from "../../utils/constants";
+
+
 import { getReport } from "../../services/reportesService";
 import { downloadCsv } from "../../utils/csv";
 import { money, localDate, dateLabel } from "../../utils/format";
@@ -23,12 +23,17 @@ function monthFilters() {
   };
 }
 export default function ReportesVentasPage() {
-  useStoredData(KEYS.orders);
-  useStoredData(KEYS.products);
   const [filters, setFilters] = useState(monthFilters);
   const [draft, setDraft] = useState(monthFilters);
   const [error, setError] = useState("");
-  const report = getReport(filters);
+  const [report, setReport] = useState(null);
+  useEffect(() => {
+    let active = true;
+    getReport(filters).then(r => { if(active) setReport(r); })
+      .catch(e => { if(active) setError(e.message); });
+    return () => { active = false; };
+  }, [filters]);
+  if (!report) return <p role="status">Cargando reportes desde MySQL… {error}</p>;
   const maxCategory = Math.max(
     ...report.byCategory.map((item) => item.total),
     1,
@@ -127,33 +132,32 @@ export default function ReportesVentasPage() {
       </section>
       <p className="report-period">
         Mostrando del <strong>{dateLabel(filters.desde)}</strong> al{" "}
-        <strong>{dateLabel(filters.hasta)}</strong> · Solo pagos aprobados y
-        pedidos sin cancelar.
+        <strong>{dateLabel(filters.hasta)}</strong> · Solo pedidos confirmados con descuento de stock (pago no comprobado).
       </p>
       <div className="stats-grid">
         <StatCard
-          title="Ingresos del período"
+          title="Montos de pedidos"
           value={money(report.revenue)}
-          detail="Valor de ventas aprobadas"
+          detail="Valor de pedidos confirmados"
           Icon={CircleDollarSign}
           accent
         />
         <StatCard
-          title="Ventas aprobadas"
+          title="Pedidos confirmados"
           value={report.saleCount}
           detail={`${report.orders.length} pedidos en total`}
           Icon={ShoppingBag}
         />
         <StatCard
-          title="Unidades vendidas"
+          title="Unidades solicitadas"
           value={report.units}
-          detail="Sumatoria de productos vendidos"
+          detail="Sumatoria de productos de pedidos"
           Icon={Package}
         />
         <StatCard
-          title="Ticket promedio"
+          title="Monto medio por pedido"
           value={money(report.averageTicket)}
-          detail="Ingresos / ventas aprobadas"
+          detail="Montos / pedidos confirmados"
           Icon={ReceiptText}
         />
       </div>
@@ -161,8 +165,8 @@ export default function ReportesVentasPage() {
         <section className="panel">
           <div className="panel-heading">
             <div>
-              <h2>Evolución de ventas</h2>
-              <p>Ingresos por fecha dentro del período.</p>
+              <h2>Evolución de pedidos</h2>
+              <p>Monto de pedidos por fecha dentro del período.</p>
             </div>
             <span className="legend">
               <i />
@@ -174,8 +178,8 @@ export default function ReportesVentasPage() {
         <section className="panel">
           <div className="panel-heading">
             <div>
-              <h2>Ventas por categoría</h2>
-              <p>Las familias de productos con más ingresos.</p>
+              <h2>Pedidos por categoría</h2>
+              <p>Las familias de productos con más montos solicitados.</p>
             </div>
           </div>
           <div className="category-list">
@@ -202,8 +206,8 @@ export default function ReportesVentasPage() {
       <section className="panel">
         <div className="panel-heading">
           <div>
-            <h2>Detalle de ventas aprobadas</h2>
-            <p>Estas ventas se incluyen en el resumen y la exportación.</p>
+            <h2>Detalle de pedidos confirmados</h2>
+            <p>Pedidos con stock confirmado. No acredita pago recibido.</p>
           </div>
           <span className="count-chip">{report.saleCount} ventas</span>
         </div>
@@ -237,7 +241,7 @@ export default function ReportesVentasPage() {
               {!report.saleCount && (
                 <tr>
                   <td colSpan={5} className="empty-state">
-                    No se encontraron ventas aprobadas en el período.
+                    No se encontraron pedidos confirmados en el período.
                   </td>
                 </tr>
               )}

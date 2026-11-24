@@ -17,5 +17,11 @@ public class ProductoController {
  @PostMapping @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')") public ResponseEntity<ProductoResponse> crear(@Valid @RequestBody ProductoRequest r){return ResponseEntity.status(HttpStatus.CREATED).body(service.crear(r));}
  @PutMapping("/{id}") @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')") public ProductoResponse actualizar(@PathVariable Long id,@Valid @RequestBody ProductoRequest r){return service.actualizar(id,r);}
  @DeleteMapping("/{id}") @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')") public ResponseEntity<Void> eliminar(@PathVariable Long id){service.eliminar(id);return ResponseEntity.noContent().build();}
+ @PutMapping("/{id}/ajustar-stock") @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')")
+ public ProductoResponse ajustar(@PathVariable Long id,@RequestBody java.util.Map<String,Integer> body){
+  Integer delta=body.get("delta");
+  if(delta==null)throw new com.sonidovivo.catalogo.exception.ReglaNegocioException("Debes informar delta");
+  return service.ajustarStock(id,delta);
+ }
  @PutMapping("/{id}/descontar-stock") @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')") public ProductoResponse descontar(@PathVariable Long id,@Valid @RequestBody DescontarStockRequest r){return service.descontar(id,r.cantidad());}
 }

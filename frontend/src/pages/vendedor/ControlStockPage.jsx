@@ -1,38 +1,31 @@
 import { useEffect, useState } from "react";
 import { Boxes, TriangleAlert, PackageX } from "../../components/ui/Icons";
-import { productosIniciales } from "../../data/productosVendedor";
+import { listProducts, changeStock } from "../../services/catalogoService";
 import StockRow from "../../components/vendedor/StockRow";
 import PageHeader from "../../components/ui/PageHeader";
 import StatCard from "../../components/ui/StatCard";
-import { cargarDatos, guardarDatos } from "../../utils/storageVendedor";
+
 
 export default function ControlStockPage() {
-  const [productos, setProductos] = useState(() =>
-    cargarDatos("sonidoVivo_productos", productosIniciales),
-  );
-  const [busqueda, setBusqueda] = useState("");
-
-  useEffect(() => {
-    guardarDatos("sonidoVivo_productos", productos);
-  }, [productos]);
-
-  const aumentarStock = (id) => {
-    setProductos((actuales) =>
-      actuales.map((producto) =>
-        producto.id === id ? { ...producto, stock: producto.stock + 1 } : producto,
-      ),
-    );
+  const [productos, setProductos] = useState([]);
+  const [busqueda, setBusqueda] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const cargar = async () => {
+    try { setProductos(await listProducts()); setError(''); }
+    catch (e) { setError(e.message); }
   };
-
-  const disminuirStock = (id) => {
-    setProductos((actuales) =>
-      actuales.map((producto) =>
-        producto.id === id && producto.stock > 0
-          ? { ...producto, stock: producto.stock - 1 }
-          : producto,
-      ),
-    );
+  useEffect(() => { cargar(); }, []);
+  const ajustar = async (id, delta) => {
+    const producto = productos.find(p => p.id === id);
+    if (!producto || busy || producto.stock + delta < 0) return;
+    setBusy(true);
+    try { await changeStock(producto, producto.stock + delta); await cargar(); }
+    catch (e) { setError(e.message); }
+    finally { setBusy(false); }
   };
+  const aumentarStock = id => ajustar(id, 1);
+  const disminuirStock = id => ajustar(id, -1);
 
   const totalProductos = productos.length;
   const productosSinStock = productos.filter((producto) => producto.stock === 0).length;
@@ -51,6 +44,7 @@ export default function ControlStockPage() {
         description="Consulta y ajusta rápidamente las existencias disponibles de Sonido Vivo."
       />
 
+      {error && <div role="alert" className="alert alert-danger">{error}</div>}
       <div className="stats-grid stats-three">
         <StatCard title="Productos" value={totalProductos} detail="Referencias visibles" Icon={Boxes} />
         <StatCard title="Stock crítico" value={productosStockCritico} detail="Dos unidades o menos" Icon={TriangleAlert} accent />

@@ -18,6 +18,15 @@ public class CatalogoService {
  private void aplicar(Producto p,ProductoRequest r){p.setCodigo(r.codigo().trim());p.setNombre(r.nombre().trim());p.setModelo(r.modelo().trim());p.setDescripcion(r.descripcion());p.setPrecio(r.precio());p.setStock(r.stock());p.setCategoria(categorias.findById(r.categoriaId()).orElseThrow(()->new RecursoNoEncontradoException("Categoría no encontrada: "+r.categoriaId())));p.setMarca(marcas.findById(r.marcaId()).orElseThrow(()->new RecursoNoEncontradoException("Marca no encontrada: "+r.marcaId())));}
  @Transactional public void eliminar(Long id){if(!productos.existsById(id))throw new RecursoNoEncontradoException("Producto no encontrado: "+id);productos.deleteById(id);}
  @Transactional public ProductoResponse descontar(Long id,int cantidad){Producto p=productos.buscarPorIdConBloqueo(id).orElseThrow(()->new RecursoNoEncontradoException("Producto no encontrado: "+id));if(cantidad<1)throw new ReglaNegocioException("La cantidad debe ser mayor que cero");if(p.getStock()<cantidad)throw new ReglaNegocioException("Stock insuficiente. Disponible: "+p.getStock());p.setStock(p.getStock()-cantidad);return ProductoResponse.from(p);}
+ /** Ajuste atómico sin reemplazar los demás campos del producto (evita sobrescribir cambios concurrentes). */
+ @Transactional public ProductoResponse ajustarStock(Long id,int delta){
+  if(delta==0 || Math.abs((long)delta)>10000)throw new ReglaNegocioException("Ajuste de stock inválido");
+  Producto p=productos.buscarPorIdConBloqueo(id).orElseThrow(()->new RecursoNoEncontradoException("Producto no encontrado: "+id));
+  long nuevo=(long)p.getStock()+delta;
+  if(nuevo<0 || nuevo>Integer.MAX_VALUE)throw new ReglaNegocioException("Stock insuficiente o fuera de rango");
+  p.setStock((int)nuevo);
+  return ProductoResponse.from(p);
+ }
  @Transactional(readOnly=true) public List<CategoriaResponse> listarCategorias(){return categorias.findAll().stream().map(CategoriaResponse::from).toList();}
  @Transactional public CategoriaResponse crearCategoria(CategoriaRequest r){if(categorias.existsByNombreIgnoreCase(r.nombre().trim()))throw new ReglaNegocioException("La categoría ya existe");return CategoriaResponse.from(categorias.save(new Categoria(r.nombre().trim(),r.descripcion())));}
  @Transactional public CategoriaResponse actualizarCategoria(Long id,CategoriaRequest r){Categoria c=categorias.findById(id).orElseThrow(()->new RecursoNoEncontradoException("Categoría no encontrada: "+id));if(categorias.existsByNombreIgnoreCase(r.nombre().trim())&&!c.getNombre().equalsIgnoreCase(r.nombre().trim()))throw new ReglaNegocioException("La categoría ya existe");c.setNombre(r.nombre().trim());c.setDescripcion(r.descripcion());return CategoriaResponse.from(c);}

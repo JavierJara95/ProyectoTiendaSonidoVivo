@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCarrito } from '../../context/CarritoContext.jsx';
-import { registrarPedido } from '../../data/pedidos.js';
+import { createOrder, normalizeOrder } from '../../services/pedidosService';
+import { useAuth } from '../../context/AuthContext';
 import { rutaCliente } from './rutasCliente.js';
 
 function formatearPrecio(precio) {
@@ -34,7 +35,9 @@ function CarritoPage() {
   } = useCarrito();
   const navigate = useNavigate();
   const location = useLocation();
-  const [formulario, setFormulario] = useState(FORMULARIO_INICIAL);
+  const { user } = useAuth();
+  const [formulario, setFormulario] = useState(() => ({ ...FORMULARIO_INICIAL, nombre: user?.nombre || '', correo: user?.email || '' }));
+  const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState('');
 
@@ -66,7 +69,7 @@ function CarritoPage() {
     return Object.keys(nuevosErrores).length === 0;
   }
 
-  function confirmarPedido(evento) {
+  async function confirmarPedido(evento) {
     evento.preventDefault();
     setMensaje('');
     if (items.length === 0) {
@@ -85,22 +88,19 @@ function CarritoPage() {
           region: formulario.region.trim(),
         };
 
-    const resultado = registrarPedido({
-      items,
-      cliente: formulario,
-      entrega,
-      total,
-    });
-
-    if (!resultado.ok) {
-      setMensaje(resultado.mensaje);
-      return;
+    setEnviando(true);
+    try {
+      const guardado = await createOrder({ items, cliente: formulario, entrega });
+      const pedido = normalizeOrder(guardado);
+      vaciarCarrito();
+      navigate(rutaCliente(location.pathname, `pedido-confirmado/${encodeURIComponent(pedido.folio)}`), {
+        state: { pedido },
+      });
+    } catch (error) {
+      setMensaje(error.message);
+    } finally {
+      setEnviando(false);
     }
-
-    vaciarCarrito();
-    navigate(rutaCliente(location.pathname, `pedido-confirmado/${encodeURIComponent(resultado.pedido.folio)}`), {
-      state: { pedido: resultado.pedido },
-    });
   }
 
   return (
@@ -222,8 +222,8 @@ function CarritoPage() {
                     </div>
                   </div>
                 )}
-                <button type="submit" className="btn btn-primary w-100">Confirmar pedido</button>
-                <p className="small text-secondary mt-3 mb-0">Esta demostración registra los pedidos en el almacenamiento local de este navegador; no procesa pagos ni genera envíos reales.</p>
+                <button type="submit" disabled={enviando} className="btn btn-primary w-100">{enviando ? "Registrando en MySQL…" : "Confirmar pedido"}</button>
+                <p className="small text-secondary mt-3 mb-0">El pedido se registra en MySQL y descuenta stock del catálogo; esta versión no procesa pagos electrónicos ni contrata transportes.</p>
               </div>
             </form>
           </section>

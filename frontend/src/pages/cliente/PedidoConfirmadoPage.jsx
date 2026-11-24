@@ -19,7 +19,7 @@ function PedidoConfirmadoPage() {
         <div className="card-body p-4 p-md-5 text-center">
           <div className="display-4 text-success mb-3" aria-hidden="true">✓</div>
           <h1 className="h2 fw-bold">¡Pedido registrado!</h1>
-          <p className="text-secondary">Tu pedido quedó registrado en esta demostración. Guarda el folio para consultar su estado.</p>
+          <p className="text-secondary">Tu pedido se registró en la base de datos. Guarda el folio para consultar su estado. El pago y el despacho real se coordinan por separado.</p>
           <div className="alert alert-success" role="status">
             <span className="d-block small">Folio del pedido</span>
             <strong className="fs-4">{folio}</strong>
@@ -39,7 +39,7 @@ function PedidoConfirmadoPage() {
             <Link to={rutaCliente(location.pathname, 'seguimiento')} className="btn btn-primary">Seguir mi pedido</Link>
             <Link to={rutaCliente(location.pathname, 'catalogo')} className="btn btn-outline-secondary">Volver al catálogo</Link>
           </div>
-          <p className="small text-secondary mt-4 mb-0">Los pedidos se almacenan localmente en este navegador. No se ha realizado un pago ni contratado un envío real.</p>
+          <p className="small text-secondary mt-4 mb-0">Pedido persistido en el backend. Esta aplicación no cobra pagos ni contrata transportes de forma automática.</p>
         </div>
       </section>
     </main>

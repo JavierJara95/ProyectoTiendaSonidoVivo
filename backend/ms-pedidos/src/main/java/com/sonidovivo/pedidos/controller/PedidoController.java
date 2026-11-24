@@ -23,7 +23,7 @@ public class PedidoController {
     public PedidoController(PedidoService service) { this.service = service; }
 
     @PostMapping
-    @PreAuthorize("hasRole('CLIENTE')")
+    @PreAuthorize("hasAnyRole('CLIENTE','ADMIN')")
     @Operation(summary = "Crear pedido y descontar stock real de ms-catalogo")
     public ResponseEntity<PedidoResponse> crear(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CrearPedidoRequest request) {
         PedidoResponse r = service.crear(jwt.getSubject(), request);
@@ -31,7 +31,7 @@ public class PedidoController {
     }
 
     @GetMapping("/mis-pedidos")
-    @PreAuthorize("hasRole('CLIENTE')")
+    @PreAuthorize("hasAnyRole('CLIENTE','ADMIN')")
     @Operation(summary = "Historial privado del cliente autenticado (sub del JWT)")
     public List<PedidoResponse> misPedidos(@AuthenticationPrincipal Jwt jwt) {
         return service.misPedidos(jwt.getSubject());

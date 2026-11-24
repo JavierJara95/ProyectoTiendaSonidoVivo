@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import productos from '../../data/productos.json';
+import { listProducts } from '../../services/catalogoService';
 import { useCarrito } from '../../context/CarritoContext.jsx';
 import { rutaCliente } from './rutasCliente.js';
 
@@ -13,6 +13,26 @@ function formatearPrecio(precio) {
 }
 
 function CatalogoPage() {
+  const [productos, setProductos] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState('');
+  useEffect(() => {
+    let active = true;
+    listProducts().then(data => { if (active) setProductos(data); })
+      .catch(err => { if (active) setErrorCarga(err.message); })
+      .finally(() => { if (active) setCargando(false); });
+    return () => { active = false; };
+  }, []);
+  const [productos, setProductos] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState('');
+  useEffect(() => {
+    let active = true;
+    listProducts().then(data => { if (active) setProductos(data); })
+      .catch(err => { if (active) setErrorCarga(err.message); })
+      .finally(() => { if (active) setCargando(false); });
+    return () => { active = false; };
+  }, []);
   const [busqueda, setBusqueda] = useState('');
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('Todas');
   const [precioMinimo, setPrecioMinimo] = useState('');
@@ -31,7 +51,7 @@ function CatalogoPage() {
     ];
 
     return ['Todas', ...lista.sort((a, b) => a.localeCompare(b, 'es'))];
-  }, []);
+  }, [productos]);
 
   const minimo = precioMinimo.trim() === '' ? null : Number(precioMinimo);
   const maximo = precioMaximo.trim() === '' ? null : Number(precioMaximo);
@@ -70,7 +90,7 @@ function CatalogoPage() {
         coincidePrecioMaximo
       );
     });
-  }, [busqueda, categoriaSeleccionada, minimo, maximo, rangoPrecioInvalido]);
+  }, [productos, busqueda, categoriaSeleccionada, minimo, maximo, rangoPrecioInvalido]);
 
   function manejarAgregar(producto) {
     const resultado = agregarProducto(producto);
@@ -106,6 +126,10 @@ function CatalogoPage() {
         </Link>
       </div>
 
+      {cargando && <div className="alert alert-info" role="status">Cargando catálogo desde el backend…</div>}
+      {errorCarga && <div className="alert alert-danger" role="alert">{errorCarga}</div>}
+      {cargando && <div className="alert alert-info" role="status">Cargando catálogo desde el backend…</div>}
+      {errorCarga && <div className="alert alert-danger" role="alert">{errorCarga}</div>}
       {mensaje && <div className="alert alert-info" role="status">{mensaje}</div>}
 
       <section

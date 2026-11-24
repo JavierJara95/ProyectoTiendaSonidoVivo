@@ -1,37 +1,35 @@
 import { useEffect, useState } from "react";
 import { ShoppingBag, PackageCheck, Truck, Clock3 } from "../../components/ui/Icons";
-import { pedidosIniciales } from "../../data/pedidosVendedor";
+import { allOrders, normalizeOrder, changeOrderState } from "../../services/pedidosService";
 import PedidoCard from "../../components/vendedor/PedidoCard";
 import PageHeader from "../../components/ui/PageHeader";
 import StatCard from "../../components/ui/StatCard";
-import { cargarDatos, guardarDatos } from "../../utils/storageVendedor";
+
 
 export default function GestionPedidosPage() {
-  const [pedidos, setPedidos] = useState(() =>
-    cargarDatos("sonidoVivo_pedidos", pedidosIniciales),
-  );
-  const [filtroEstado, setFiltroEstado] = useState("Todos");
-
-  useEffect(() => {
-    guardarDatos("sonidoVivo_pedidos", pedidos);
-  }, [pedidos]);
-
-  const cambiarEstado = (id, nuevoEstado) => {
-    setPedidos((actuales) =>
-      actuales.map((pedido) =>
-        pedido.id === id ? { ...pedido, estado: nuevoEstado } : pedido,
-      ),
-    );
+  const [pedidos, setPedidos] = useState([]);
+  const [filtroEstado, setFiltroEstado] = useState('Todos');
+  const [error, setError] = useState('');
+  const cargar = async () => {
+    try { setPedidos((await allOrders()).map(normalizeOrder)); setError(''); }
+    catch (e) { setError(e.message); }
   };
-
-  const guardarSeguimiento = (id, nuevoNumero) => {
-    setPedidos((actuales) =>
-      actuales.map((pedido) =>
-        pedido.id === id
-          ? { ...pedido, numeroSeguimiento: nuevoNumero }
-          : pedido,
-      ),
-    );
+  useEffect(() => { cargar(); }, []);
+  const actualizarPedido = async (id, estado, tracking) => {
+    try {
+      await changeOrderState(id, estado, tracking);
+      await cargar();
+    } catch (e) { setError(e.message); }
+  };
+  const cambiarEstado = (id, nuevoEstado, tracking) => {
+    const pedido = pedidos.find(p => p.id === id);
+    const estados = { 'En preparación': 'EN_PREPARACION', 'Despachado': 'DESPACHADO', 'Entregado': 'ENTREGADO' };
+    actualizarPedido(id, estados[nuevoEstado], tracking || pedido?.numeroSeguimiento || null);
+  };
+  const guardarSeguimiento = (id, numeroSeguimiento) => {
+    const pedido = pedidos.find(p => p.id === id);
+    const estados = { 'En preparación': 'EN_PREPARACION', 'Despachado': 'DESPACHADO', 'Entregado': 'ENTREGADO' };
+    actualizarPedido(id, estados[pedido?.estado], numeroSeguimiento);
   };
 
   const totalPedidos = pedidos.length;
@@ -58,6 +56,7 @@ export default function GestionPedidosPage() {
         description="Revisa pedidos remotos, actualiza su estado y registra números de seguimiento."
       />
 
+      {error && <div role="alert" className="alert alert-danger">{error}</div>}
       <div className="stats-grid vendor-stats">
         <StatCard title="Total" value={totalPedidos} detail="Pedidos registrados" Icon={ShoppingBag} />
         <StatCard title="En preparación" value={pedidosPreparacion} detail="Pendientes de despacho" Icon={Clock3} accent />

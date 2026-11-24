@@ -3,7 +3,7 @@ export default function SalesChart({ data }) {
   if (!data.length)
     return (
       <div className="chart-empty">
-        Todavía no hay ventas aprobadas en este período.
+        Todavía no hay pedidos confirmados en este período.
       </div>
     );
   const max = Math.max(...data.map((item) => item.total), 1);
@@ -11,7 +11,7 @@ export default function SalesChart({ data }) {
     <div
       className="sales-chart"
       role="img"
-      aria-label={`Ventas por fecha: ${data.map((item) => `${dateLabel(item.fecha)}: ${money(item.total)}`).join("; ")}`}
+      aria-label={`Montos de pedidos por fecha: ${data.map((item) => `${dateLabel(item.fecha)}: ${money(item.total)}`).join("; ")}`}
     >
       <div className="chart-scale">
         <span>{money(max)}</span>

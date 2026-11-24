@@ -7,7 +7,7 @@ import { validateLogin } from "../../utils/validaciones";
 import Brand from "../../components/common/Brand";
 import FormField from "../../components/ui/FormField";
 import Alert from "../../components/ui/Alert";
-import { DEMO_PASSWORD } from "../../data/demo";
+
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -114,36 +114,6 @@ export default function LoginPage() {
           <p className="auth-switch">
             ¿Primera vez aquí? <Link to="/registro">Crea tu cuenta</Link>
           </p>
-          <details className="demo-access">
-            <summary>Accesos de prueba</summary>
-            <p>
-              Contraseña: <code>{DEMO_PASSWORD}</code>
-            </p>
-            <div className="demo-buttons">
-              {[
-                ["Administrador", "admin"],
-                ["Vendedor", "vendedor"],
-                ["Cliente", "cliente"],
-              ].map(([label, role]) => (
-                <button
-                  className="btn btn-sm btn-light"
-                  type="button"
-                  key={role}
-                  disabled={busy}
-                  onClick={() => {
-                    setValues({
-                      email: `${role}@sonidovivo.cl`,
-                      password: DEMO_PASSWORD,
-                    });
-                    setMessage("");
-                    setErrors({});
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </details>
           <div className="auth-bottom">
             <ShieldCheck size={15} />
             <span>Tu espacio, con acceso según tu rol.</span>

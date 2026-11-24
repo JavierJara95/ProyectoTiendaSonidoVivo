@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Plus,
   Search,
@@ -12,8 +12,8 @@ import {
   ChevronRight,
 } from "../../components/ui/Icons";
 import { useAuth } from "../../context/AuthContext";
-import { useStoredData } from "../../hooks/useStoredData";
-import { KEYS, ROLE_LABELS } from "../../utils/constants";
+
+import { ROLE_LABELS } from "../../utils/constants";
 import { listUsers, setUserActive } from "../../services/usuariosService";
 import PageHeader from "../../components/ui/PageHeader";
 import StatCard from "../../components/ui/StatCard";
@@ -21,8 +21,14 @@ import Alert from "../../components/ui/Alert";
 import Modal from "../../components/ui/Modal";
 import UserForm from "../../components/admin/UserForm";
 export default function GestionUsuariosPage() {
-  useStoredData(KEYS.users);
-  const users = listUsers();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const reloadUsers = async () => {
+    try { setUsers(await listUsers()); setError(''); }
+    catch (e) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { reloadUsers(); }, []);
   const { user: current } = useAuth();
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("");
@@ -47,6 +53,7 @@ export default function GestionUsuariosPage() {
     setError("");
     try {
       await setUserActive(confirm.id, !confirm.activo);
+      await reloadUsers();
       setNotice(confirm.activo ? "Usuario desactivado." : "Usuario activado.");
       setConfirm(null);
     } catch (e) {
@@ -95,6 +102,7 @@ export default function GestionUsuariosPage() {
           Icon={ShoppingBag}
         />
       </div>
+      {loading && <p role="status">Cargando usuarios desde el backend…</p>}
       <Alert kind="success">{notice}</Alert>
       <Alert>{error}</Alert>
       <section className="panel">
@@ -271,6 +279,7 @@ export default function GestionUsuariosPage() {
             setForm(null);
             setNotice(message);
             setError("");
+            reloadUsers();
           }}
         />
       )}

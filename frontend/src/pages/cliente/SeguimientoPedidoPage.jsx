@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { buscarPedido } from '../../data/pedidos.js';
+import { trackOrder, normalizeOrder } from '../../services/pedidosService';
+import { useAuth } from '../../context/AuthContext';
 import { rutaCliente } from './rutasCliente.js';
 
 function formatearPrecio(precio) {
@@ -9,16 +10,23 @@ function formatearPrecio(precio) {
 
 function SeguimientoPedidoPage() {
   const location = useLocation();
+  const { user } = useAuth();
+  const [busy, setBusy] = useState(false);
   const [folio, setFolio] = useState('');
   const [correo, setCorreo] = useState('');
   const [pedido, setPedido] = useState(null);
   const [mensaje, setMensaje] = useState('');
 
-  function consultarPedido(evento) {
-    evento.preventDefault();
-    const encontrado = buscarPedido(folio, correo);
-    setPedido(encontrado);
-    setMensaje(encontrado ? '' : 'No encontramos un pedido con ese folio y correo. Revisa los datos e inténtalo nuevamente.');
+  async function consultarPedido(evento) {
+    evento.preventDefault(); setBusy(true); setMensaje(''); setPedido(null);
+    try {
+      // El backend verifica la propiedad del pedido con el JWT; no basta conocer el folio.
+      const encontrado = normalizeOrder(await trackOrder(folio));
+      if (encontrado.correo.toLowerCase() !== (correo || user?.email || "").trim().toLowerCase())
+        throw new Error('El correo no coincide con el registrado para el pedido.');
+      setPedido(encontrado);
+    } catch (e) { setMensaje(e.message); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -39,9 +47,9 @@ function SeguimientoPedidoPage() {
               </div>
               <div className="mb-3">
                 <label htmlFor="correo-seguimiento" className="form-label">Correo electrónico</label>
-                <input id="correo-seguimiento" type="email" className="form-control" value={correo} onChange={(e) => setCorreo(e.target.value)} required />
+                <input id="correo-seguimiento" type="email" className="form-control" value={correo || user?.email || ""} onChange={(e) => setCorreo(e.target.value)} required />
               </div>
-              <button className="btn btn-primary" type="submit">Consultar estado</button>
+              <button disabled={busy} className="btn btn-primary" type="submit">{busy ? "Consultando…" : "Consultar estado"}</button>
               {mensaje && <div className="alert alert-warning mt-3 mb-0" role="alert">{mensaje}</div>}
             </div>
           </form>
@@ -54,7 +62,7 @@ function SeguimientoPedidoPage() {
                 <p className="small text-secondary mb-1">Pedido encontrado</p>
                 <h2 id="resultado-seguimiento-titulo" className="h4 fw-bold">{pedido.folio}</h2>
                 <p>Estado actual: <span className="badge text-bg-primary">{pedido.estado}</span></p>
-                <p className="mb-1"><strong>Cliente:</strong> {pedido.datosCliente?.nombre || pedido.cliente}</p>
+                <p className="mb-1"><strong>Cliente:</strong> {pedido.clienteNombre || pedido.cliente}</p>
                 <p className="mb-1"><strong>Fecha:</strong> {new Date(pedido.fecha).toLocaleString('es-CL')}</p>
                 <p className="mb-1"><strong>Entrega:</strong> {pedido.entrega?.tipo || pedido.tipoEntrega}</p>
                 {(pedido.entrega?.transportista || ['Starken', 'Chilexpress'].includes(pedido.tipoEntrega)) && <p className="mb-1"><strong>Empresa:</strong> {pedido.entrega?.transportista || pedido.tipoEntrega}</p>}

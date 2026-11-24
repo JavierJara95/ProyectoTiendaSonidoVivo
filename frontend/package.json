@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:ep3": "vitest run src/tests/ep3-api.test.js"
   },
   "dependencies": {
     "bootstrap": "5.3.8",

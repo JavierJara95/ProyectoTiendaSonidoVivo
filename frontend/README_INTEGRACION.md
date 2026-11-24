@@ -1,50 +1,28 @@
-# Sonido Vivo — Integración de las 3 ramas
-
-Base visual y estructural: `feature/admin-gestion`.
-
-## Integrado
-
-- Administración y autenticación desde `feature/admin-gestion`.
-- Catálogo, detalle, carrito, confirmación y seguimiento desde `feature/cliente-catalogo`.
-- Gestión de pedidos, stock y mapa Leaflet desde `feature/vendedor-pedidos`.
-- Un solo `AppRouter` con rutas protegidas por rol.
-- Un solo `Layout` (sidebar, topbar y footer) usando el estilo de admin-gestion.
-- Navegación por rol:
-  - Admin: resumen, usuarios, reportes, pedidos, stock, ubicación y catálogo.
-  - Vendedor: pedidos, stock y ubicación.
-  - Cliente: catálogo, carrito y seguimiento.
-- Los pedidos del cliente y vendedor comparten la clave `sonidoVivo_pedidos` en `localStorage`.
-- Los iconos de la interfaz son componentes SVG locales en React (`src/components/ui/Icons.jsx`), evitando depender de `lucide-react`.
+# Integración frontend React — EP3
 
 ## Instalación
 
-```bash
-npm install
-npm run dev
+1. Levantar los tres Spring Boot, preparar sus bases MySQL y compartir `JWT_SECRET` según `../documentacion/INTEGRACION_EP3.md`.
+2. Copiar `.env.example` a `.env.local` (solo URL, sin secretos).
+3. Ejecutar `npm ci` y `npm run dev` con Node 22 o superior.
+4. Abrir `http://localhost:5173/login`.
+
+## Servicios consultados
+
+- `src/services/authService.js` y `api.js`: JWT emitido por 8083, restauración con `/api/auth/me`, sesión en `sessionStorage`, limpieza ante vencimiento/401.
+- `usuariosService.js`: gestión real de usuarios con 8083 (solo ADMIN).
+- `catalogoService.js`: productos y ajuste de inventario desde 8081.
+- `pedidosService.js`: crear, listar, seguir y actualizar pedidos con 8082.
+- `reportesService.js`: estadísticas de pedidos confirmados; no certifica pagos.
+
+Las muestras de `src/data/` se mantienen como materiales EP2 y para pruebas anteriores, pero **las vistas EP3 usan las API reales**. El carrito pendiente se mantiene temporalmente en la memoria React.
+
+## Validación
+
 ```
-
-## Validación antes de subir
-
-```bash
-npm test
+npm run test:ep3   # pruebas de adaptadores HTTP con fetch simulado
+npm test           # conjunto completo; tests heredados de EP2 pueden requerir migración
 npm run build
 ```
 
-## Git recomendado
-
-Crear una rama de integración desde esta versión:
-
-```bash
-git checkout -b integration/sonido-vivo-completo
-git add .
-git commit -m "merge: integra modulos admin cliente y vendedor"
-git push -u origin integration/sonido-vivo-completo
-```
-
-Cuando el equipo confirme que funciona, se puede integrar esa rama a `main` localmente o por Pull Request.
-
-## Archivos que no deben subirse
-
-- `node_modules/`
-- `dist/`
-- `coverage/`
+La compilación de frontend y las pruebas de integración real **no se ejecutaron en la preparación de este ZIP** porque no estaban disponibles las dependencias npm. Registra resultados de tu PC en `../documentacion/PRUEBAS_EP3.md`.

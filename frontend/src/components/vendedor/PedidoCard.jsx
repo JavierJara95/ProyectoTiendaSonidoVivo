@@ -1,6 +1,9 @@
+import { useState, useEffect } from "react";
 import StatusBadge from "../ui/StatusBadge";
 
 export default function PedidoCard({ pedido, onCambiarEstado, onGuardarSeguimiento }) {
+  const [tracking, setTracking] = useState(pedido.numeroSeguimiento || '');
+  useEffect(() => setTracking(pedido.numeroSeguimiento || ''), [pedido.numeroSeguimiento]);
   const estadoNormalizado = String(pedido.estado || "").toLowerCase();
   return (
     <article className="panel vendor-order-card">
@@ -27,7 +30,7 @@ export default function PedidoCard({ pedido, onCambiarEstado, onGuardarSeguimien
             className="form-select"
             value={pedido.estado}
             aria-label={`Estado pedido ${pedido.id}`}
-            onChange={(e) => onCambiarEstado(pedido.id, e.target.value)}
+            onChange={(e) => onCambiarEstado(pedido.id, e.target.value, tracking)}
           >
             <option>En preparación</option>
             <option>Despachado</option>
@@ -40,10 +43,12 @@ export default function PedidoCard({ pedido, onCambiarEstado, onGuardarSeguimien
             id={`seguimiento-${pedido.id}`}
             type="text"
             className="form-control"
-            value={pedido.numeroSeguimiento || ""}
-            onChange={(e) => onGuardarSeguimiento(pedido.id, e.target.value)}
+            value={tracking}
+            onChange={(e) => setTracking(e.target.value)}
             placeholder="Ej: CHX458921"
           />
+          {pedido.estado === 'Despachado' && <button type="button" className="btn btn-outline-primary btn-sm mt-2" onClick={() => onGuardarSeguimiento(pedido.id, tracking)}>Guardar seguimiento</button>}
+          {pedido.estado === 'En preparación' && pedido.entrega?.modalidad !== 'RETIRO_TIENDA' && <small className="text-secondary d-block">Para despachar, ingresa el seguimiento antes de cambiar el estado.</small>}
         </div>
       </div>
     </article>

@@ -46,6 +46,16 @@ public class CatalogoClient {
         } catch (RestClientResponseException e) { throw mapear(e, "descontar stock del producto " + productoId); }
           catch (ResourceAccessException e) { throw sinConexion(); }
     }
+    /** Compensación best effort cuando una compra multiítem falla tras descuentos previos. */
+    public void reponerStock(Long productoId, int cantidad) {
+        try {
+            client.put().uri("/api/productos/{id}/ajustar-stock", productoId)
+                    .headers(h -> h.setBearerAuth(tokenServicio.tokenCatalogo()))
+                    .body(java.util.Map.of("delta", cantidad))
+                    .retrieve().toBodilessEntity();
+        } catch (RestClientResponseException e) { throw mapear(e, "reponer stock del producto " + productoId); }
+          catch (ResourceAccessException e) { throw sinConexion(); }
+    }
     private IntegracionCatalogoException mapear(RestClientResponseException e, String operacion) {
         int status = e.getStatusCode().value();
         return new IntegracionCatalogoException("Catálogo rechazó " + operacion + " (HTTP " + status + ")",

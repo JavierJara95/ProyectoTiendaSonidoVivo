@@ -83,15 +83,31 @@ public class PedidoService {
                 catalogo.descontarStock(detalle.getProductoId(), detalle.getCantidad());
                 persistencia.marcarDescontado(guardado.getId(), detalle.getProductoId());
             } catch (IntegracionCatalogoException e) {
+                compensarDescuentos(guardado.getId());
                 persistencia.marcarIncidencia(guardado.getId());
                 throw new IncidenciaStockException(guardado.getFolio(), e.isConflicto());
             } catch (RuntimeException e) {
+                compensarDescuentos(guardado.getId());
                 persistencia.marcarIncidencia(guardado.getId());
                 throw new IncidenciaStockException(guardado.getFolio(), false);
             }
         }
         persistencia.marcarConfirmado(guardado.getId());
         return PedidoResponse.from(persistencia.buscar(guardado.getId()));
+    }
+
+    /** Revierte solo descuentos confirmados en la BD. Respuestas HTTP inciertas requieren conciliación manual. */
+    private void compensarDescuentos(Long pedidoId) {
+        Pedido pedido = persistencia.buscar(pedidoId);
+        for (DetallePedido detalle : pedido.getDetalles()) {
+            if (!detalle.isStockDescontado()) continue;
+            try {
+                catalogo.reponerStock(detalle.getProductoId(), detalle.getCantidad());
+                persistencia.marcarRepuesto(pedidoId, detalle.getProductoId());
+            } catch (RuntimeException ignored) {
+                // Se conserva el marcador de descuento. No se elimina ni oculta la incidencia.
+            }
+        }
     }
 
     public PedidoResponse detalle(Long id, String requesterId, boolean personal) {

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
   ArrowUpRight,
   ArrowRight,
@@ -9,8 +10,8 @@ import {
   AlertTriangle,
 } from "../../components/ui/Icons";
 import { useAuth } from "../../context/AuthContext";
-import { useStoredData } from "../../hooks/useStoredData";
-import { KEYS } from "../../utils/constants";
+
+
 import { money, number, localDate, dateLabel } from "../../utils/format";
 import { getReport } from "../../services/reportesService";
 import { listUsers } from "../../services/usuariosService";
@@ -19,14 +20,21 @@ import StatCard from "../../components/ui/StatCard";
 import StatusBadge from "../../components/ui/StatusBadge";
 import SalesChart from "../../components/admin/SalesChart";
 export default function DashboardAdminPage() {
-  useStoredData(KEYS.orders);
-  useStoredData(KEYS.products);
-  useStoredData(KEYS.users);
   const { user } = useAuth();
   const now = new Date();
   const first = new Date(now.getFullYear(), now.getMonth(), 1);
-  const report = getReport({ desde: localDate(first), hasta: localDate(now) });
-  const users = listUsers();
+  const [report, setReport] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    let active = true;
+    Promise.all([getReport({ desde: localDate(first), hasta: localDate(now) }), listUsers()])
+      .then(([r, u]) => { if (active) { setReport(r); setUsers(u); } })
+      .catch(e => { if(active) setError(e.message); });
+    return () => { active = false; };
+  }, []);
+  if (error) return <div className="alert alert-danger" role="alert">{error}</div>;
+  if (!report) return <p role="status">Cargando estadísticas desde MySQL…</p>;
   const recent = [...report.orders]
     .sort((a, b) => b.fecha.localeCompare(a.fecha))
     .slice(0, 5);
@@ -67,14 +75,14 @@ export default function DashboardAdminPage() {
         <StatCard
           title="Ventas del mes"
           value={money(report.revenue)}
-          detail="Pagos aprobados · sin cancelados"
+          detail="Pedidos confirmados · pagos no verificados"
           Icon={CircleDollarSign}
           accent
         />
         <StatCard
           title="Pedidos del mes"
           value={report.orders.length}
-          detail={`${report.saleCount} con venta aprobada`}
+          detail={`${report.saleCount} confirmados con stock`}
           Icon={ShoppingBag}
         />
         <StatCard
@@ -95,7 +103,7 @@ export default function DashboardAdminPage() {
           <div className="panel-heading">
             <div>
               <h2>El pulso de tus ventas</h2>
-              <p>Ingresos aprobados por día del mes.</p>
+              <p>Montos de pedidos confirmados por día (no representan pagos cobrados).</p>
             </div>
             <span className="legend">
               <i />
@@ -153,7 +161,7 @@ export default function DashboardAdminPage() {
             <p>La actividad más reciente de este mes.</p>
           </div>
           <span className="demo-data-chip">
-            Datos de demostración iniciales
+            Registros del backend
           </span>
         </div>
         <div className="table-responsive">

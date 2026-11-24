@@ -27,6 +27,14 @@ public class PedidoPersistenciaService {
     }
 
     @Transactional
+    public void marcarRepuesto(Long id, Long productoId) {
+        Pedido p = buscar(id);
+        p.getDetalles().stream().filter(d -> d.getProductoId().equals(productoId))
+                .findFirst().orElseThrow(() -> new RecursoNoEncontradoException("Detalle no encontrado"))
+                .setStockDescontado(false);
+    }
+
+    @Transactional
     public void marcarConfirmado(Long id) {
         Pedido p = buscar(id);
         if (p.getDetalles().stream().anyMatch(d -> !d.isStockDescontado()))
@@ -69,7 +77,8 @@ public class PedidoPersistenciaService {
         boolean transicionValida = (actual == EstadoPedido.EN_PREPARACION
                         && ((modalidad == ModalidadEntrega.DESPACHO_DOMICILIO && nuevo == EstadoPedido.DESPACHADO)
                         || (modalidad == ModalidadEntrega.RETIRO_TIENDA && nuevo == EstadoPedido.ENTREGADO)))
-                || (actual == EstadoPedido.DESPACHADO && nuevo == EstadoPedido.ENTREGADO);
+                || (actual == EstadoPedido.DESPACHADO && nuevo == EstadoPedido.ENTREGADO)
+                || (actual == EstadoPedido.DESPACHADO && nuevo == EstadoPedido.DESPACHADO);
         if (!transicionValida) throw new ReglaNegocioException("Transición de estado no permitida: " + actual + " → " + nuevo);
         if (nuevo == EstadoPedido.DESPACHADO) {
             String codigo = request.numeroSeguimiento();

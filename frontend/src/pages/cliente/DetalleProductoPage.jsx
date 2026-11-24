@@ -1,6 +1,6 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { useState } from 'react';
-import productos from '../../data/productos.json';
+import { useEffect, useState } from 'react';
+import { getProductByCode } from '../../services/catalogoService';
 import { useCarrito } from '../../context/CarritoContext.jsx';
 import { rutaCliente } from './rutasCliente.js';
 
@@ -17,14 +17,24 @@ function DetalleProductoPage() {
   const location = useLocation();
   const { agregarProducto, totalUnidades } = useCarrito();
   const [mensaje, setMensaje] = useState('');
+  const [producto, setProducto] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    let active = true; setLoading(true); setError('');
+    getProductByCode(codigo).then(p => { if(active) setProducto(p); })
+      .catch(e => { if(active) setError(e.message); })
+      .finally(() => { if(active) setLoading(false); });
+    return () => { active = false; };
+  }, [codigo]);
 
-  const producto = productos.find((item) => item.codigo === codigo);
+  if (loading) return <main className="container py-5" role="status">Cargando producto…</main>;
 
   if (!producto) {
     return (
       <main className="container py-5">
         <h1 className="h3">Producto no encontrado</h1>
-        <p>El producto solicitado no existe en el catálogo.</p>
+        <p>{error || "El producto solicitado no existe en el catálogo."}</p>
         <Link to={rutaCliente(location.pathname, 'catalogo')} className="btn btn-primary">
           Volver al catálogo
         </Link>
