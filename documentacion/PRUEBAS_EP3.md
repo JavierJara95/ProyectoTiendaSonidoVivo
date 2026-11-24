@@ -1,26 +1,55 @@
-# Matriz de pruebas EP3 — pendiente de ejecución real
+# Matriz de pruebas EP3 — Sonido Vivo
 
-**Estado**: la revisión estática de fuentes no equivale a aprobación funcional. Registrar fecha, capturas y resultado de cada caso al ejecutarlo en Windows/Java/MySQL.
+**Registro de verificación:** 24 de noviembre de 2026.  
+**Fuente:** ejecuciones manuales y automatizadas informadas por el equipo durante la revisión de EP3.  
+**Observación:** los resultados representan las pruebas reportadas, no una certificación externa. Conservar capturas y salidas de terminal para sustentar la entrega.
 
-| Caso | Pasos | Resultado esperado | Estado |
+## Resumen de pruebas automatizadas
+
+| Componente | Resultado informado | Estado |
+|---|---|---|
+| Frontend React/Vitest | 107 pruebas aprobadas de 107; `npm.cmd run build` correcto | Aprobado |
+| `ms-catalogo` | `mvnw.cmd test`: BUILD SUCCESS | Aprobado; archivar log |
+| `ms-pedidos` | `mvnw.cmd test`: 9 pruebas aprobadas de 9 tras corregir el mock de incidencia | Aprobado |
+| `ms-usuarios-auth` | `mvnw.cmd test`: BUILD SUCCESS | Aprobado; archivar log |
+
+## Matriz de pruebas manuales y de integración
+
+| ID | Caso de prueba | Resultado registrado | Estado |
 |---|---|---|---|
-| P01 | Levantar cada ms y entrar Swagger | 8081, 8082, 8083 con `/v3/api-docs` y Swagger | Pendiente |
-| P02 | `POST /api/auth/register`, `POST /api/auth/login` | alta 201 y sesión JWT | Pendiente |
-| P03 | GET `/api/auth/me` con JWT y sin JWT | 200 y 401 respectivamente | Pendiente |
-| P04 | CLIENTE GET `/api/usuarios` | 403 | Pendiente |
-| P05 | ADMIN crear y desactivar usuario | Registro persistido en MySQL; inactivo no puede ingresar | Pendiente |
-| P06 | CLIENTE agregar carrito -> pedir retiro | Pedido creado, folio y stock descontado | Pendiente |
-| P07 | CLIENTE comprar producto agotado | 409, sin pedido confirmado | Pendiente |
-| P08 | CLIENTE buscar pedido ajeno por folio | 403 | Pendiente |
-| P09 | VENDEDOR cambiar despacho con tracking | 200, estado y seguimiento persistidos | Pendiente |
-| P10 | VENDEDOR cambiar a ENTREGADO | 200, sólo transición válida | Pendiente |
-| P11 | CLIENTE PUT stock o roles | 403 | Pendiente |
-| P12 | ADMIN lista pedidos y consulta dashboard | datos provenientes de SQL, no localStorage | Pendiente |
-| P13 | Recargar pestaña con JWT válido | se mantiene sesión; `/api/auth/me` es consultado | Pendiente |
-| P14 | Forzar expiración JWT y recargar | vuelve a login | Pendiente |
-| P15 | Ejecutar con `npm run build`, `npm test`, `mvnw.cmd test` en cada ms | registrar salida real y fallos | Pendiente |
-| P16 | Anchos 360, 768 y 1280px | sin cortes de contenidos ni acciones inaccesibles | Pendiente |
-| P17 | Interrumpir catálogo durante pedido multiítem | incidencia, compensación donde esté confirmada | Pendiente |
+| P01 | Acceso a Swagger y servicios REST 8081/8082/8083 | Se verificó operación del sistema y Swagger en catálogo y usuarios; completar capturas del servicio de pedidos | Parcial |
+| P02 | Registro y login con JWT | Se crearon usuarios cliente y vendedor; login funcional y persistencia en MySQL | Aprobado |
+| P03 | GET `/api/auth/me` con/sin JWT | Se verificó sesión válida y 401 en `/api/usuarios` sin token; no consta prueba específica de `/api/auth/me` | Parcial |
+| P04 | CLIENTE GET `/api/usuarios` | Backend devuelve 403 para cliente | Aprobado |
+| P05 | ADMIN crea, modifica, desactiva y reactiva usuario | Persistencia MySQL; el login del usuario desactivado es rechazado | Aprobado |
+| P06 | CLIENTE realiza compra y confirma descuento de stock | Pedido con folio y stock GA001 reducido de 8 a 7; MySQL confirma | Aprobado |
+| P07 | Compra con stock insuficiente | No consta prueba manual específica de 409; verificar antes de presentarla como E2E | Pendiente |
+| P08 | CLIENTE intenta consultar pedido ajeno | HTTP 403, y `/api/pedidos/mis-pedidos` devuelve la lista propia | Aprobado |
+| P09 | VENDEDOR cambia estado y añade seguimiento | Despacho por Chilexpress con código de seguimiento y MySQL actualizados | Aprobado |
+| P10 | VENDEDOR entrega pedido | Estado ENTREGADO reflejado en cliente y MySQL | Aprobado |
+| P11 | CLIENTE intenta modificar stock/roles mediante API | Las rutas restringidas se comprobaron visualmente y el backend rechazó acceso a usuarios; completar PUT directo a stock con rol CLIENTE | Parcial |
+| P12 | ADMIN consulta dashboard y reportes reales | Cifras cotejadas con MySQL y exportación CSV verificada | Aprobado |
+| P13 | Recarga React con sesión válida | Sesión conservada después de F5 | Aprobado |
+| P14 | Caducidad JWT | Se simuló `expiresAt=1` en React y se verificó 401 con token inválido; no equivale a esperar expiración firmada real | Parcial |
+| P15 | Compilación y pruebas | React 107/107; Maven BUILD SUCCESS en los tres microservicios; pedidos 9/9 | Aprobado |
+| P16 | Responsive 360, 768 y 1280 px | Se comprobaron pantallas y navegación responsive | Aprobado |
+| P17 | Incidencia/compensación por error del catálogo | Prueba unitaria de `PedidoServiceTest` aprobada; no consta simulación manual E2E multiítem | Parcial |
 
-### Información de seguridad
-No mostrar valores completos de `JWT_SECRET`, `ADMIN_PASSWORD` ni tokens en grabaciones públicas. La firma se valida en backend aunque se oculten los botones en frontend.
+## Comprobaciones adicionales realizadas
+
+- CRUD completo de productos desde Swagger: POST, GET, PUT, DELETE y verificación de 404 después del borrado.
+- Ajuste manual de stock desde el panel de vendedor y persistencia en MySQL.
+- Validación de formularios (campos obligatorios, email y contraseñas).
+- Backend responde 404 ante consulta de producto inexistente.
+- Roles CLIENTE, VENDEDOR y ADMIN comprobados desde React y backend.
+
+## Pendientes para la entrega final
+
+1. Insertar capturas reales en `documentacion/MANUAL_USUARIO_EP3.md` o entregar manual ilustrado en PDF/Word.
+2. Adjuntar o conservar registros de terminal de Vitest y Maven donde se vean número de pruebas y `BUILD SUCCESS`.
+3. Registrar cantidad de pruebas de `ms-catalogo` y `ms-usuarios-auth` a partir de sus reportes Surefire.
+4. Completar las pruebas marcadas como parciales o pendientes si el tiempo lo permite, sin declararlas aprobadas indebidamente.
+5. Grabar video grupal y verificar los enlaces públicos de entrega en AVA.
+
+**Importante:** no publicar `JWT_SECRET`, `ADMIN_PASSWORD`, credenciales, tokens completos ni archivos `.env` locales. Los montos del dashboard representan pedidos con stock confirmado, no pagos cobrados.
+
