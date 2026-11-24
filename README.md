@@ -7,7 +7,7 @@ Proyecto académico integrado: React + Vite, tres microservicios Spring Boot, My
 - [Ejecución e integración](documentacion/INTEGRACION_EP3.md) — **leer primero**; incluye puertos, SQL, variables y endpoints.
 - [Cambios aplicados al ZIP](documentacion/CAMBIOS_REALIZADOS.md).
 - [Manual de usuario EP3](documentacion/MANUAL_USUARIO_EP3.md) — requiere añadir capturas reales.
-- [Plan de pruebas y aceptación EP3](documentacion/PRUEBAS_EP3.md) — por ejecutar antes de la defensa.
+- [Plan de pruebas y aceptación EP3](documentacion/PRUEBAS_EP3.md) — resultados de pruebas ejecutadas y verificaciones pendientes.
 
 ## Distribución del trabajo
 
