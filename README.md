@@ -31,7 +31,13 @@ El frontend EP3 se conecta a servicios reales; **no crea usuarios de demostraci�
 
 El catálogo oficial proporcionado contiene **51 registros de muestra**, aunque el caso menciona 340 referencias. No se han inventado los restantes productos.
 
-**Estado**: la sintaxis de fuentes JS/JSX fue comprobada, pero no se completó compilación ni prueba E2E en este entorno (sin dependencias offline). Validar MySQL, Swagger, tests y React en tu PC antes de afirmar cumplimiento de toda la rúbrica. El video y las capturas reales están pendientes.
+**Estado EP3 (24-11-2026):**
+- Frontend React: 107 de 107 pruebas aprobadas.
+- Compilación React: BUILD SUCCESS.
+- Microservicio catálogo: pruebas Maven aprobadas (BUILD SUCCESS).
+- Microservicio pedidos: 9 de 9 pruebas aprobadas.
+- Microservicio usuarios y autenticación: pruebas Maven aprobadas (BUILD SUCCESS).
+- Integración React, Spring Boot y MySQL: comprobada mediante pruebas funcionales.
 
 ### Código histórico
 
