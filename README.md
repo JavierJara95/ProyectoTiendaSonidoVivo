@@ -9,6 +9,13 @@ Proyecto académico integrado: React + Vite, tres microservicios Spring Boot, My
 - [Manual de usuario EP3](documentacion/Sonido_Vivo_EP3_Manual_Usuario_11_Capturas.pdf) — manual completo en PDF, con 11 capturas reales de los módulos cliente, vendedor y administrador.
 - [Plan de pruebas y aceptación EP3](documentacion/PRUEBAS_EP3.md) — resultados de pruebas ejecutadas y verificaciones pendientes.
 
+## Video de presentación — EP3
+
+Demostración del funcionamiento de Tienda Sonido Vivo,
+desarrollada por Valentina, Javier y Esteban.
+
+[Ver video de presentación de la EP3](https://drive.google.com/file/d/1K0u1mHuF-i--bvlIVkoPRpGtC4pbkYeV/view?usp=sharing)
+
 ## Distribución del trabajo
 
 - **Valentina:** `backend/ms-catalogo/`, `database/02_schema_catalogo.sql`.
